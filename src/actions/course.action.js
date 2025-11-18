@@ -16,7 +16,15 @@ export async function getAllCourseAction({ params }) {
 export async function getCourseByIdAction({ id }) {
   try {
     const res = await request.get(`/course/${id}`)
-    console.log("tidak perlu berdasi", res)
+    return res.data
+  } catch (error) {
+    return handleAxiosError(error)
+  }
+}
+
+export async function createCourseTransactionAction({ body }) {
+  try {
+    const res = await request.post('/course/transaction', body)
     return res.data
   } catch (error) {
     return handleAxiosError(error)

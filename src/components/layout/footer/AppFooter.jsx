@@ -6,7 +6,7 @@ import { Instagram, Facebook, Github } from 'lucide-react'
 
 export default function AppFooter() {
   return (
-    <footer className="mt-20 w-full bg-[#0E1B50] text-white">
+    <footer className="w-full bg-[#0E1B50] text-white">
       {/* Upper Section */}
       <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-8 px-10 pt-12 pb-0 md:flex-row">
         {/* Left - Logo + Description */}
@@ -20,13 +20,11 @@ export default function AppFooter() {
               height={60}
               className="mb-2"
             />
-            <h2 className="mb-2 -ml-4 text-lg font-semibold">
-              Learniverse
-            </h2>
+            <h2 className="mb-2 -ml-4 text-lg font-semibold">Learniverse</h2>
           </div>
 
           {/* Description */}
-          <p className="max-w-md text-justify text-sm leading-relaxed text-gray-200 ml-4">
+          <p className="ml-4 max-w-md text-justify text-sm leading-relaxed text-gray-200">
             Learniverse adalah platform pembelajaran online yang menawarkan
             kursus interaktif, komunitas, dan pengalaman belajar yang
             menyenangkan untuk mendukung pengembangan diri tanpa batas.
@@ -34,7 +32,7 @@ export default function AppFooter() {
         </div>
 
         {/* Right - Links & Social */}
-        <div className="flex flex-col items-start justify-between gap-10 md:mt-4 md:w-[55%] md:flex-row md:items-start ml-8">
+        <div className="ml-8 flex flex-col items-start justify-between gap-10 md:mt-4 md:w-[55%] md:flex-row md:items-start">
           {/* Links */}
           <div>
             <h1 className="mb-2 text-base font-semibold">Links</h1>
@@ -53,7 +51,9 @@ export default function AppFooter() {
 
           {/* Social Media */}
           <div>
-            <h3 className="mb-3 text-base font-semibold ml">Our Social Media</h3>
+            <h3 className="ml mb-3 text-base font-semibold">
+              Our Social Media
+            </h3>
             <div className="flex items-center gap-3">
               <Link
                 href="https://www.instagram.com"

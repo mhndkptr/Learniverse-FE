@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import {
+  createCourseTransactionAction,
   getAllCourseAction,
   getCourseByIdAction,
 } from '@/actions/course.action'
@@ -38,7 +39,6 @@ export function useGetAllCourse({ params }) {
 
 // ⬇ 2. GET COURSE BY ID
 export function useGetCourseById({ courseId }) {
-  console.log(courseId)
   const { data, isLoading, isPending, refetch } = useQuery({
     queryKey: ['getCourseById', courseId],
     queryFn: () => getCourseByIdAction({ id: courseId }),
@@ -54,7 +54,7 @@ export function useGetCourseById({ courseId }) {
       })
     },
   })
-console.log(data)
+
   const course = useMemo(() => {
     return data?.code === 200 ? data.data : null
   }, [data])
@@ -65,4 +65,31 @@ console.log(data)
     isPending,
     refetch,
   }
+}
+
+export function useCreateCourseTransactionMutation({ successAction }) {
+  const createCourseTransactionMutation = useMutation({
+    mutationFn: (data) => createCourseTransactionAction({ body: data.payload }),
+    onSuccess: (data) => {
+      if (data?.code === 201 || data?.code === 200) {
+        successAction()
+        return data
+      } else {
+        toast.error('Course transaction failed to create!', {
+          description: data?.message
+            ? data.message
+            : 'Unexpected error occurred',
+        })
+      }
+    },
+    onError: (error) => {
+      toast.error('Something went wrong!', {
+        description: error?.message
+          ? error.message
+          : 'Unexpected error occurred',
+      })
+    },
+  })
+
+  return { createCourseTransactionMutation }
 }

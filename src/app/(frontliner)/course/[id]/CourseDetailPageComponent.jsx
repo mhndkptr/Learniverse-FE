@@ -2,13 +2,14 @@
 
 import EnrollCourseDialog from '@/components/core/course/EnrollCourseDialog'
 import MentorCard from '@/components/core/course/MentorCard'
+import { Button } from '@/components/ui/button'
 import { useGetCourseById } from '@/hooks/course.hook'
 import Image from 'next/image'
+import { useState } from 'react'
 
 export default function CourseDetailPage({ id }) {
   const { course, isLoading } = useGetCourseById({ courseId: id })
-  console.log(course)
-  // Loading state
+  const [isEnrollDialogOpen, setIsEnrollDialogOpen] = useState(false)
 
   if (isLoading)
     return (
@@ -29,8 +30,8 @@ export default function CourseDetailPage({ id }) {
     )
 
   return (
-    <div className="flex items-center justify-center">
-      <main className="flex w-full flex-col items-center justify-between px-16 py-32">
+    <div className="flex">
+      <main className="flex w-full flex-col px-16 py-32">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Left: Cover + Description */}
           <div className="space-y-6 lg:col-span-2">
@@ -65,7 +66,14 @@ export default function CourseDetailPage({ id }) {
               </h2>
 
               {/*  Gunakan Dialog Enroll */}
-              <EnrollCourseDialog course={course} />
+              <Button
+                variant="primary"
+                size="default"
+                className="w-full justify-center"
+                onClick={() => setIsEnrollDialogOpen(true)}
+              >
+                Enroll Now
+              </Button>
 
               <p className="mt-3 text-xs text-gray-500">
                 By enrolling in this course, you agree to our terms and
@@ -87,6 +95,12 @@ export default function CourseDetailPage({ id }) {
           </div>
         </div>
       </main>
+
+      <EnrollCourseDialog
+        course={course}
+        onOpenChange={setIsEnrollDialogOpen}
+        open={isEnrollDialogOpen}
+      />
     </div>
   )
 }

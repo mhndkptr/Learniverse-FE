@@ -6,7 +6,7 @@ import Link from 'next/link'
 
 export default function CourseCard({ course }) {
   return (
-    <div className="overflow-hidden rounded-lg bg-white shadow-md transition-shadow duration-300 hover:shadow-xl">
+    <div className="w-full overflow-hidden rounded-lg bg-white shadow-md transition-shadow duration-300 hover:shadow-xl">
       {/* Gambar */}
       <img
         src={course.cover_uri || '/default-course.jpg'}
@@ -23,7 +23,7 @@ export default function CourseCard({ course }) {
 
         {/* Tombol menuju detail */}
         <div className="mt-3">
-          <Link href={`/course/${course.id || '1'}`} passHref>
+          <Link href={`/course/${course.id}`} passHref>
             <Button
               variant="primary"
               size="default"

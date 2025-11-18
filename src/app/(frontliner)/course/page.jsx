@@ -1,26 +1,30 @@
 'use client'
-import { useState, useEffect } from 'react'
+
+import { useState, useMemo } from 'react'
+import { useGetAllCourse } from '@/hooks/course.hook'
 import CourseCard from '@/components/core/course/CourseCard'
 
 export default function CoursePage() {
-  const [courses, setCourses] = useState([])
   const [search, setSearch] = useState('')
 
-  useEffect(() => {
-    // sementara dummy, nanti bisa fetch dari API
-    const dummyCourses = Array(6).fill({
-      title: 'Calculus',
-      description:
-        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Tempus bibendum nisi duis mauris mauris conubia.',
-      cover_uri:
-        'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=800&auto=format&fit=crop',
-    })
-    setCourses(dummyCourses)
-  }, [])
+  // Fetch data dari backend
+  const { courses, isLoading } = useGetAllCourse({
+    params: {
+      // kamu bisa tambahkan pagination atau order_by bila perlu
+      // limit: 50,
+    },
+  })
 
-  const filteredCourses = courses.filter((course) =>
-    course.title.toLowerCase().includes(search.toLowerCase())
-  )
+  // Loading
+  if (isLoading) return <p className="mt-10 text-center">Loading...</p>
+
+  // Filter by search
+  const filteredCourses = useMemo(() => {
+    if (!courses) return []
+    return courses.filter((course) =>
+      course.title.toLowerCase().includes(search.toLowerCase())
+    )
+  }, [courses, search])
 
   return (
     <div className="flex items-center justify-center">
@@ -41,7 +45,7 @@ export default function CoursePage() {
         </div>
 
         {/* Courses grid */}
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="w-full grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {filteredCourses.map((course, index) => (
             <CourseCard key={index} course={course} />
           ))}

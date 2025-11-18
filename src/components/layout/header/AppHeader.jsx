@@ -1,8 +1,14 @@
+'use client'
+
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
 
 export default function AppHeader() {
+  const router = useRouter()
+  const pathname = usePathname()
+
   return (
     <header className="relative w-full">
       <nav className="fixed top-0 right-0 left-0 z-50 bg-white shadow-[0_3px_5px_rgba(0,0,0,0.1)]">
@@ -51,8 +57,8 @@ export default function AppHeader() {
               <ul className="mt-4 flex flex-col rounded-lg border border-gray-100 bg-gray-50 p-4 font-medium md:mt-0 md:flex-row md:space-x-14 md:border-0 md:bg-white md:p-0 rtl:space-x-reverse dark:border-gray-700 dark:bg-gray-800 md:dark:bg-gray-900">
                 <li>
                   <a
-                    href="#"
-                    className="block rounded-sm bg-neutral-500 px-3 py-2 font-bold text-neutral-500 md:bg-transparent md:p-0 md:text-neutral-500"
+                    href="/"
+                    className={`block rounded-sm ${pathname === '/' ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100 md:border-0 md:p-0 md:hover:bg-transparent md:hover:text-neutral-500`}
                     aria-current="page"
                   >
                     Home
@@ -60,16 +66,16 @@ export default function AppHeader() {
                 </li>
                 <li>
                   <a
-                    href="#"
-                    className="block rounded-sm px-3 py-2 text-gray-900 hover:bg-gray-100 md:border-0 md:p-0 md:hover:bg-transparent md:hover:text-neutral-500"
+                    href="/course"
+                    className={`block rounded-sm ${pathname === '/course' ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100 md:border-0 md:p-0 md:hover:bg-transparent md:hover:text-neutral-500`}
                   >
                     Courses
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
-                    className="block rounded-sm px-3 py-2 text-gray-900 hover:bg-gray-100 md:border-0 md:p-0 md:hover:bg-transparent md:hover:text-neutral-500"
+                    href="/mentor"
+                    className={`block rounded-sm ${pathname === '/mentor' ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100 md:border-0 md:p-0 md:hover:bg-transparent md:hover:text-neutral-500`}
                   >
                     Mentors
                   </a>
@@ -79,10 +85,18 @@ export default function AppHeader() {
           </div>
 
           <div className="space-x-3">
-            <Button variant="secondary" className="hidden md:inline-block">
+            <Button
+              onClick={() => router.push('/auth/register')}
+              variant="secondary"
+              className="hidden md:inline-block"
+            >
               Register
             </Button>
-            <Button variant="primary" className="hidden md:inline-block">
+            <Button
+              onClick={() => router.push('/auth/login')}
+              variant="primary"
+              className="hidden md:inline-block"
+            >
               Login
             </Button>
           </div>

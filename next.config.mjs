@@ -2,10 +2,25 @@
 const nextConfig = {
   reactCompiler: true,
   images: {
-    domains: [
-      'images.unsplash.com', // gambar dari Unsplash
-      'randomuser.me', // gambar mentor dari randomuser API
-      'res.cloudinary.com',
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'randomuser.me',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 }

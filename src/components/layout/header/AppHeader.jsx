@@ -138,10 +138,16 @@ export default function AppHeader() {
                     Profile
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => router.push('/my/history')}
+                    onClick={() => router.push('/my/history/order')}
                     className={'cursor-pointer'}
                   >
-                    History
+                    Order History
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => router.push('/my/history/mentor')}
+                    className={'cursor-pointer'}
+                  >
+                    Mentor History
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -253,10 +259,18 @@ export default function AppHeader() {
                       </li>
                       <li>
                         <p
-                          onClick={() => router.push('/my/history')}
-                          className={`block cursor-pointer rounded-sm ${pathname.startsWith('/my/history') ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100`}
+                          onClick={() => router.push('/my/history/order')}
+                          className={`block cursor-pointer rounded-sm ${pathname.startsWith('/my/history/order') ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100`}
                         >
-                          History
+                          Order History
+                        </p>
+                      </li>
+                      <li>
+                        <p
+                          onClick={() => router.push('/my/history/mentor')}
+                          className={`block cursor-pointer rounded-sm ${pathname.startsWith('/my/history/mentor') ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100`}
+                        >
+                          Mentor History
                         </p>
                       </li>
                     </ul>

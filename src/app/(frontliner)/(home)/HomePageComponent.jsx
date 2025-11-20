@@ -201,7 +201,12 @@ export default function HomePageComponent() {
                   join our community of educators. Share your expertise, connect
                   with eager learners, and make a real impact on their lives.
                 </p>
-                <Button variant="secondary" size={'lg'} className="w-fit">
+                <Button
+                  variant="secondary"
+                  onClick={() => router.push('/mentor/registration')}
+                  size={'lg'}
+                  className="w-fit"
+                >
                   Become Mentor
                   <ExternalLink size={16} className="ml-2" />
                 </Button>

@@ -12,7 +12,7 @@ export default function AppHeader() {
   return (
     <header className="relative w-full">
       <nav className="fixed top-0 right-0 left-0 z-50 bg-white shadow-[0_3px_5px_rgba(0,0,0,0.1)]">
-        <div className="mx-auto flex max-w-[85vw] flex-wrap items-center justify-between py-1">
+        <div className="mx-auto flex w-full flex-wrap items-center justify-between px-5 py-1 md:px-16">
           <div className="flex items-center space-x-20">
             <Link
               href="/"
@@ -26,6 +26,7 @@ export default function AppHeader() {
                 className="h-16 w-auto"
               />
             </Link>
+
             <button
               data-collapse-toggle="navbar-default"
               type="button"
@@ -50,6 +51,7 @@ export default function AppHeader() {
                 />
               </svg>
             </button>
+
             <div
               className="hidden w-full md:block md:w-auto"
               id="navbar-default"

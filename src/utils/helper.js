@@ -87,3 +87,27 @@ export function getTwoInitials(name) {
   const initials = firstInitial + secondInitial
   return initials
 }
+
+/**
+ * Format angka menjadi format mata uang.
+ * @param {number} amount - Angka yang akan diformat.
+ * @param {string} currency - Kode mata uang (misalnya, 'USD', 'IDR', 'EUR').
+ * @param {string} locale - Locale untuk format (misalnya, 'en-US', 'id-ID').
+ * @returns {string} - Angka yang diformat sebagai mata uang.
+ */
+export const formatCurrency = (amount, currency = 'IDR', locale = 'id-ID') => {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
+export function formatDate(dateString) {
+  return new Date(dateString).toLocaleDateString('id-ID', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}

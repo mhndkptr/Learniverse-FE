@@ -124,7 +124,7 @@ export default function BackofficeUserPage() {
 
   useEffect(() => {
     setBreadcrumb([
-      { label: 'Dashboard', href: '/backoffice/overview' },
+      { label: 'Dashboard', href: '/backoffice' },
       {
         label: 'User',
         href: '/backoffice/user',

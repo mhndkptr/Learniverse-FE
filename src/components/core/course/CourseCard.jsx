@@ -9,7 +9,7 @@ export default function CourseCard({ course }) {
     <div className="w-full overflow-hidden rounded-lg bg-white shadow-md transition-shadow duration-300 hover:shadow-xl">
       {/* Gambar */}
       <img
-        src={course.cover_uri || '/default-course.jpg'}
+        src={course.cover_uri || '/assets/images/img-image-placeholder.png'}
         alt={course.title}
         className="h-40 w-full object-cover"
       />

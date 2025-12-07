@@ -25,8 +25,8 @@ export default function BackofficeCoursePage() {
   })
 
   // State untuk Dialog Delete
-  const [deleteId, setDeleteId] = useState(null) // Menyimpan ID yang akan dihapus
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false) // Mengontrol visibilitas dialog
+  const [deleteId, setDeleteId] = useState(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   // --- DEBOUNCE SEARCH ---
   useEffect(() => {
@@ -53,7 +53,6 @@ export default function BackofficeCoursePage() {
     useDeleteCourseAdminMutation({
       onSuccess: () => {
         refetch()
-        // Tutup dialog setelah berhasil delete
         setIsDeleteDialogOpen(false)
         setDeleteId(null)
       },
@@ -68,8 +67,8 @@ export default function BackofficeCoursePage() {
 
   // Handler 1: Saat tombol tong sampah diklik
   const handleDeleteClick = (id) => {
-    setDeleteId(id) // Simpan ID
-    setIsDeleteDialogOpen(true) // Buka Pop-up
+    setDeleteId(id)
+    setIsDeleteDialogOpen(true)
   }
 
   // Handler 2: Saat tombol "Delete" di dalam Pop-up diklik
@@ -152,7 +151,7 @@ export default function BackofficeCoursePage() {
         <CourseTable
           courses={courses}
           onEdit={handleEdit}
-          onDelete={handleDeleteClick} // Ubah ke function baru
+          onDelete={handleDeleteClick}
           onToggleStatus={handleToggleStatus}
         />
       )}

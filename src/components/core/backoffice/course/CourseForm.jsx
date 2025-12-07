@@ -11,13 +11,13 @@ export default function CourseForm({ defaultValues, onSubmit, isLoading }) {
     description: '',
     content: '',
     price: '',
-    is_open_registration_member: false, // Default false
-    is_open_registration_mentor: false, // Default false
+    is_open_registration_member: false, 
+    is_open_registration_mentor: false, 
     cover: null,
     preview: null,
   })
 
-  // Load data jika ini mode Edit (defaultValues ada)
+ 
   useEffect(() => {
     if (defaultValues) {
       setForm({

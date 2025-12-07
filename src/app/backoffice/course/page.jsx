@@ -1,50 +1,62 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Plus, Search, ArrowUpDown } from 'lucide-react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { Plus, Search, Pencil, Trash2, ArrowUpDown, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   useGetAllCourseAdmin,
   useDeleteCourseAdminMutation,
   useUpdateCourseAdminMutation,
 } from '@/hooks/course.hook'
-import CourseTable from '@/components/core/backoffice/course/CourseTable'
+import { useDebounce } from '@/hooks/use-debounce.hook'
+import { useBackofficeBreadcrumb } from '@/contexts/backoffice-breadcrumb.context'
+import { formatCurrency } from '@/utils/helper'
 
+import BaseTable from '@/components/_shared/BaseTable'
+import PaginationControls from '@/components/layout/pagination/PaginationControls'
 import ConfirmDialogDelete from '@/components/core/backoffice/course/ConfirmDialogDelete'
 
 export default function BackofficeCoursePage() {
   const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const { setBreadcrumb } = useBackofficeBreadcrumb()
 
   // --- STATE ---
-  const [search, setSearch] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const initialSearch = searchParams.get('search') || ''
+  const [searchTerm, setSearchTerm] = useState(initialSearch)
+  const debouncedSearchTerm = useDebounce(searchTerm, 500)
+
   const [sortConfig, setSortConfig] = useState({
-    field: 'created_at',
-    direction: 'desc',
+    key: searchParams.get('sortKey') || 'created_at',
+    direction: searchParams.get('sortDir') || 'desc',
   })
 
-  // State untuk Dialog Delete
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+
   const [deleteId, setDeleteId] = useState(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
-  // --- DEBOUNCE SEARCH ---
+  // --- BREADCRUMB ---
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(search)
-    }, 500)
-    return () => clearTimeout(handler)
-  }, [search])
+    setBreadcrumb([
+      { label: 'Dashboard', href: '/backoffice' },
+      { label: 'Courses', href: '/backoffice/course' },
+    ])
+  }, [setBreadcrumb])
 
   // --- FETCH DATA ---
-  const { courses, isLoading, refetch } = useGetAllCourseAdmin({
+  const { courses, meta, isLoading, refetch } = useGetAllCourseAdmin({
     params: {
       pagination: {
-        page: 1,
-        limit: 100,
+        page: currentPage,
+        limit: itemsPerPage,
       },
-      search: debouncedSearch,
-      order_by: [{ field: sortConfig.field, direction: sortConfig.direction }],
+      search: debouncedSearchTerm,
+      order_by: [{ field: sortConfig.key, direction: sortConfig.direction }],
     },
   })
 
@@ -63,18 +75,43 @@ export default function BackofficeCoursePage() {
   })
 
   // --- HANDLERS ---
-  const handleEdit = (id) => router.push(`/backoffice/course/${id}/edit`)
+  const buildQueryString = useCallback((search, sortKey, sortDir) => {
+    const params = new URLSearchParams()
+    if (search) params.set('search', search)
+    if (sortKey && sortDir !== 'none') {
+      params.set('sortKey', sortKey)
+      params.set('sortDir', sortDir)
+    }
+    return params.toString()
+  }, [])
 
-  // Handler 1: Saat tombol tong sampah diklik
-  const handleDeleteClick = (id) => {
-    setDeleteId(id)
-    setIsDeleteDialogOpen(true)
-  }
+  useEffect(() => {
+    const nextQuery = buildQueryString(
+      debouncedSearchTerm,
+      sortConfig.key,
+      sortConfig.direction
+    )
+    if (nextQuery === searchParams.toString()) return
+    router.replace(`${pathname}?${nextQuery}`, { scroll: false })
+  }, [
+    debouncedSearchTerm,
+    sortConfig,
+    pathname,
+    router,
+    searchParams,
+    buildQueryString,
+  ])
 
-  // Handler 2: Saat tombol "Delete" di dalam Pop-up diklik
-  const handleConfirmDelete = () => {
-    if (deleteId) {
-      deleteCourse(deleteId)
+  const handleRowAction = (action, row) => {
+    if (action === 'view') {
+      // Ke Halaman Detail (View Only)
+      router.push(`/backoffice/course/${row.id}`)
+    } else if (action === 'edit') {
+      // Ke Halaman Edit (Manage)
+      router.push(`/backoffice/course/${row.id}/edit`)
+    } else if (action === 'delete') {
+      setDeleteId(row.id)
+      setIsDeleteDialogOpen(true)
     }
   }
 
@@ -85,40 +122,145 @@ export default function BackofficeCoursePage() {
     })
   }
 
-  const handleSortChange = (e) => {
+  const handleSortDropdown = (e) => {
     const value = e.target.value
-    const [field, direction] = value.split(':')
-    setSortConfig({ field, direction })
+    const [key, direction] = value.split(':')
+    setSortConfig({ key, direction })
   }
 
+  // --- COLUMNS CONFIG ---
+  const columns = useMemo(
+    () => [
+      {
+        key: 'title',
+        header: 'Course Info',
+        render: (row) => (
+          <div className="flex items-center gap-3 py-2">
+            <div className="h-12 w-20 shrink-0 overflow-hidden rounded bg-gray-100">
+              <img
+                src={
+                  row.cover_uri ||
+                  row.image_cover ||
+                  '/assets/images/img-image-placeholder.png'
+                }
+                alt={row.title}
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="min-w-0">
+              <p className="line-clamp-1 font-semibold text-gray-900">
+                {row.title}
+              </p>
+              <p className="font-mono text-xs text-gray-500">{row.code}</p>
+            </div>
+          </div>
+        ),
+      },
+      {
+        key: 'is_open_registration_member',
+        header: 'Member Reg.',
+        render: (row) => (
+          <StatusBadge
+            isOpen={row.is_open_registration_member}
+            onClick={() =>
+              handleToggleStatus(
+                row.id,
+                'is_open_registration_member',
+                row.is_open_registration_member
+              )
+            }
+          />
+        ),
+      },
+      {
+        key: 'is_open_registration_mentor',
+        header: 'Mentor Reg.',
+        render: (row) => (
+          <StatusBadge
+            isOpen={row.is_open_registration_mentor}
+            onClick={() =>
+              handleToggleStatus(
+                row.id,
+                'is_open_registration_mentor',
+                row.is_open_registration_mentor
+              )
+            }
+          />
+        ),
+      },
+      {
+        key: 'price',
+        header: 'Price',
+        render: (row) => (
+          <span className="font-medium text-gray-700">
+            {formatCurrency(row.price)}
+          </span>
+        ),
+      },
+      {
+        key: 'actions',
+        header: 'Action',
+        render: (row) => (
+          <div className="flex items-center gap-1">
+            {/* View Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              title="View Detail"
+              onClick={() => handleRowAction('view', row)}
+              className="text-gray-500 hover:bg-blue-50 hover:text-blue-600"
+            >
+              <Eye className="size-4" />
+            </Button>
+
+            {/* Edit Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Edit Course"
+              onClick={() => handleRowAction('edit', row)}
+              className="text-gray-500 hover:bg-amber-50 hover:text-amber-600"
+            >
+              <Pencil className="size-4" />
+            </Button>
+
+            {/* Delete Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Delete Course"
+              onClick={() => handleRowAction('delete', row)}
+              className="text-gray-500 hover:bg-red-50 hover:text-red-600"
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    []
+  )
+
   return (
-    <div className="flex flex-col gap-4">
-      {/* --- HEADER ACTIONS --- */}
+    <div className="flex flex-col gap-4 md:gap-6">
+      {/* HEADER ACTIONS */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div className="flex flex-1 items-center gap-3">
-          {/* Search Bar */}
-          <div className="relative flex w-full max-w-md items-center">
-            <div className="absolute left-3 text-gray-400">
-              <Search size={18} />
-            </div>
-            <input
-              type="text"
+          <div className="relative w-full max-w-md">
+            <Input
               placeholder="Search course..."
-              className="h-10 w-full rounded-l-md border border-r-0 border-gray-300 bg-white pr-4 pl-10 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-white pl-10"
             />
-            <button className="flex h-10 items-center justify-center rounded-r-md bg-[#0E1B50] px-4 text-white hover:bg-blue-900">
-              <Search size={18} />
-            </button>
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 opacity-50" />
           </div>
 
-          {/* Dropdown Sort */}
           <div className="relative">
             <select
-              className="h-10 cursor-pointer appearance-none rounded-md border border-gray-300 bg-white pr-8 pl-3 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none"
-              onChange={handleSortChange}
-              value={`${sortConfig.field}:${sortConfig.direction}`}
+              className="border-input focus:ring-ring h-10 cursor-pointer appearance-none rounded-md border bg-white pr-8 pl-3 text-sm focus:ring-1 focus:outline-none"
+              onChange={handleSortDropdown}
+              value={`${sortConfig.key}:${sortConfig.direction}`}
             >
               <option value="created_at:desc">Newest Created</option>
               <option value="created_at:asc">Oldest Created</option>
@@ -133,40 +275,67 @@ export default function BackofficeCoursePage() {
           </div>
         </div>
 
-        {/* Add Button */}
         <Button
           className="bg-[#0E1B50] text-white shadow-sm hover:bg-blue-900"
           onClick={() => router.push('/backoffice/course/create')}
         >
-          <Plus size={16} className="mr-2" /> Add Course
+          <Plus className="mr-2 size-4" /> Add Course
         </Button>
       </div>
 
-      {/* --- TABLE CONTENT --- */}
-      {isLoading ? (
-        <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50">
-          <p className="animate-pulse text-gray-500">Loading courses...</p>
+      {/* TABLE CONTAINER  */}
+      <div className="flex min-h-[65vh] flex-col justify-between rounded-md border bg-white">
+        <div className="flex-1">
+          <BaseTable
+            data={courses}
+            columns={columns}
+            onRowAction={handleRowAction}
+            serverSide={true}
+            sortConfig={sortConfig}
+            onSortChange={setSortConfig}
+            isLoading={isLoading}
+            searchFields={[]}
+            searchTerm={''}
+          />
         </div>
-      ) : (
-        <CourseTable
-          courses={courses}
-          onEdit={handleEdit}
-          onDelete={handleDeleteClick}
-          onToggleStatus={handleToggleStatus}
-        />
-      )}
 
-      {/* ---  DELETE DIALOG --- */}
+        {/* PAGINATION */}
+        {meta && (
+          <div className="border-t p-4">
+            <PaginationControls
+              totalItems={meta.totalItems}
+              totalPages={meta.totalPages}
+              currentPage={meta.currentPage}
+              itemsPerPage={meta.itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* DELETE DIALOG */}
       <ConfirmDialogDelete
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
-        onConfirm={handleConfirmDelete}
+        onConfirm={() => deleteId && deleteCourse(deleteId)}
         title="Delete Course"
-        description="Are you sure you want to delete this course? This action cannot be undone and will remove all related data."
         isLoading={isDeleting}
-        confirmText="Delete Course"
-        variant="danger"
       />
     </div>
+  )
+}
+
+function StatusBadge({ isOpen, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`inline-flex cursor-pointer items-center rounded-full border px-2.5 py-0.5 text-xs font-medium transition ${
+        isOpen
+          ? 'border-green-200 bg-green-100 text-green-800 hover:bg-green-200'
+          : 'border-red-200 bg-red-100 text-red-800 hover:bg-red-200'
+      }`}
+    >
+      {isOpen ? 'Open' : 'Closed'}
+    </button>
   )
 }

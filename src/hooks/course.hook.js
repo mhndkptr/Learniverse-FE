@@ -3,14 +3,14 @@
 import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import request, { handleAxiosError } from '@/utils/baseRequest'
+
 import {
   createCourseTransactionAction,
   getAllCourseAction,
   getCourseByIdAction,
   getAllCourseAdminAction,
   getCourseByIdAdminAction,
-  createCourseAction,
-  updateCourseAction,
   deleteCourseAction,
 } from '@/actions/course.action'
 
@@ -23,7 +23,7 @@ const buildCourseFormData = (data) => {
   if (data.title) form.append('title', data.title)
   if (data.code) form.append('code', data.code)
 
-  if (data.price !== undefined && data.price !== null && data.price !== '') {
+  if (data.price !== undefined && data.price !== null) {
     form.append('price', data.price)
   }
 
@@ -55,8 +55,9 @@ const buildCourseFormData = (data) => {
 }
 
 /* =========================================================
-   FRONTLINER HOOKS
+   FRONTLINER HOOKS (PUBLIC)
    ========================================================= */
+
 export function useGetAllCourse({ params }) {
   const { data, isLoading, isPending, refetch } = useQuery({
     queryKey: ['getAllCourse', params],
@@ -104,6 +105,7 @@ export function useCreateCourseTransactionMutation({ successAction } = {}) {
    BACKOFFICE / ADMIN HOOKS
    ========================================================= */
 
+// 1. GET ALL // ADMIN
 export function useGetAllCourseAdmin({ params }) {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['getAllCourseAdmin', params],
@@ -112,12 +114,14 @@ export function useGetAllCourseAdmin({ params }) {
   })
   return {
     courses: data?.data ?? [],
-    meta: data?.meta ?? null,
+
+    meta: data?.pagination ?? null,
     isLoading,
     refetch,
   }
 }
 
+// 2. GET BY ID ADMIN
 export function useGetCourseByIdAdmin({ courseId }) {
   const { data, isLoading } = useQuery({
     queryKey: ['getCourseByIdAdmin', courseId],
@@ -127,12 +131,21 @@ export function useGetCourseByIdAdmin({ courseId }) {
   return { course: data?.data ?? null, isLoading }
 }
 
+// 3. CREATE ADMIN (DIRECT AXIOS CALL)
 export function useCreateCourseAdminMutation({ onSuccess } = {}) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload) =>
-      createCourseAction({ body: buildCourseFormData(payload) }),
+    mutationFn: async (payload) => {
+      try {
+        const body = buildCourseFormData(payload)
+
+        const res = await request.post('/course', body)
+        return res.data
+      } catch (error) {
+        throw handleAxiosError(error)
+      }
+    },
     onSuccess: (res) => {
       if (res?.code === 201 || res?.code === 200) {
         toast.success('Course created successfully')
@@ -142,37 +155,45 @@ export function useCreateCourseAdminMutation({ onSuccess } = {}) {
         toast.error(res?.message || 'Failed to create course')
       }
     },
-    onError: (err) => toast.error(err.message || 'Error occurred'),
+    onError: (err) => {
+      toast.error(err.message || 'Error occurred')
+    },
   })
 }
 
-// --- SANITIZE DATA JSON ---
+// 4.  (DIRECT AXIOS CALL & SANITIZE)
 export function useUpdateCourseAdminMutation({ onSuccess } = {}) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (props) => {
-      const { id } = props
-      const rawBody = props.body || props.data || {}
-      const hasFile = rawBody.cover instanceof File
+    mutationFn: async (props) => {
+      try {
+        const { id } = props
+        const rawBody = props.body || props.data || {}
+        const hasFile = rawBody.cover instanceof File
 
-      let payload
+        let payload
 
-      if (hasFile) {
-        payload = buildCourseFormData(rawBody)
-      } else {
-        payload = {
-          title: rawBody.title,
-          code: rawBody.code,
-          description: rawBody.description,
-          content: rawBody.content,
-          price: Number(rawBody.price),
-          is_open_registration_member: rawBody.is_open_registration_member,
-          is_open_registration_mentor: rawBody.is_open_registration_mentor,
+        if (hasFile) {
+          payload = buildCourseFormData(rawBody)
+        } else {
+          payload = {
+            title: rawBody.title,
+            code: rawBody.code,
+            description: rawBody.description,
+            content: rawBody.content,
+            price: rawBody.price ? Number(rawBody.price) : undefined,
+            is_open_registration_member: rawBody.is_open_registration_member,
+            is_open_registration_mentor: rawBody.is_open_registration_mentor,
+          }
         }
-      }
 
-      return updateCourseAction({ id, body: payload })
+        // Langsung panggil API Backend
+        const res = await request.patch(`/course/${id}`, payload)
+        return res.data
+      } catch (error) {
+        throw handleAxiosError(error)
+      }
     },
     onSuccess: (res) => {
       if (res?.code === 200) {
@@ -188,6 +209,7 @@ export function useUpdateCourseAdminMutation({ onSuccess } = {}) {
   })
 }
 
+// 5. DELETE ADMIN
 export function useDeleteCourseAdminMutation({ onSuccess } = {}) {
   const queryClient = useQueryClient()
 

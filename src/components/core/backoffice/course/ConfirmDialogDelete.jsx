@@ -1,36 +1,33 @@
 'use client'
-import { Loader2, AlertTriangle } from 'lucide-react'
+
+import { AlertTriangle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import BaseDialog from '@/components/_shared/BaseDialog'
 
 export default function ConfirmDialogDelete({
   isOpen,
   onClose,
   onConfirm,
-  title = 'Are you sure?',
-  description = 'This action cannot be undone.',
+  title = 'Delete Item',
+  description = 'Are you sure? This action cannot be undone.',
   isLoading = false,
   confirmText = 'Delete',
   cancelText = 'Cancel',
   variant = 'danger',
 }) {
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-all">
-      <div className="w-full max-w-md scale-100 transform rounded-lg bg-white p-6 shadow-xl transition-all">
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:h-10 sm:w-10">
-            <AlertTriangle className="h-6 w-6 text-red-600" />
-          </div>
-          <div className="text-left">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
-              {title}
-            </h3>
-            <div className="mt-2">
-              <p className="text-sm text-gray-500">{description}</p>
-            </div>
-          </div>
-        </div>
+    <BaseDialog
+      open={isOpen}
+      onOpenChange={(val) => !val && onClose()}
+      dialogTitle={title}
+      dialogTitleIcon={<AlertTriangle className="h-5 w-5 text-red-600" />}
+      showDefaultCloseButton={false}
+      containerClassName="sm:max-w-md"
+    >
+      <div className="p-4 md:p-6">
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          {description}
+        </p>
 
         <div className="mt-6 flex justify-end gap-3">
           <Button
@@ -44,11 +41,11 @@ export default function ConfirmDialogDelete({
           <Button
             onClick={onConfirm}
             disabled={isLoading}
-            className={`${
+            className={
               variant === 'danger'
-                ? 'bg-red-600 hover:bg-red-700'
-                : 'bg-[#0E1B50] hover:bg-blue-900'
-            } text-white`}
+                ? 'bg-red-600 text-white hover:bg-red-700'
+                : 'bg-[#0E1B50] text-white hover:bg-blue-900'
+            }
           >
             {isLoading ? (
               <>
@@ -60,6 +57,6 @@ export default function ConfirmDialogDelete({
           </Button>
         </div>
       </div>
-    </div>
+    </BaseDialog>
   )
 }

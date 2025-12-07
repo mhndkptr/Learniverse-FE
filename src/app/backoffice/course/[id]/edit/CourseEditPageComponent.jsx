@@ -11,10 +11,10 @@ import { Loader2, AlertCircle } from 'lucide-react'
 export default function CourseEditPageComponent({ id }) {
   const router = useRouter()
 
-  // 1. Fetch Data Course
+  // 1. Fetch Data Course berdasarkan ID
   const { course, isLoading } = useGetCourseByIdAdmin({ courseId: id })
 
-  // 2. Setup Mutation Update
+  // 2. Setup Mutation Update dengan Redirect setelah sukses
   const updateCourseMutation = useUpdateCourseAdminMutation({
     onSuccess: () => {
       router.push('/backoffice/course')
@@ -53,7 +53,7 @@ export default function CourseEditPageComponent({ id }) {
 
   // --- STATE 3: READY (RENDER FORM) ---
   return (
-    <div className="mx-auto max-w-5xl py-10">
+    <div className="mx-auto max-w-7xl py-10">
       <div className="mb-8 flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Edit Course Data</h2>
       </div>
@@ -61,7 +61,9 @@ export default function CourseEditPageComponent({ id }) {
       <CourseForm
         defaultValues={course}
         mentors={[]}
+        // Logika Submit: Kirim ID dan Body
         onSubmit={(values) => updateCourseMutation.mutate({ id, body: values })}
+        // Loading state saat tombol Save ditekan
         isLoading={updateCourseMutation.isPending}
       />
     </div>

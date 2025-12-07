@@ -1,257 +1,311 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { Button } from '@/components/ui/button'
-import { Loader2 } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Loader2, UploadCloud } from 'lucide-react'
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import BaseForm from '@/components/_shared/BaseForm'
+
+// Schema Validasi
+const courseSchema = z.object({
+  title: z.string().min(3, 'Title must be at least 3 characters').max(150),
+  code: z
+    .string()
+    .min(3)
+    .max(10)
+    .regex(/^[a-zA-Z0-9]+$/, 'Code must be alphanumeric (no spaces)'),
+  price: z.coerce.number().min(0, 'Price must be 0 or greater'),
+  description: z.string().optional(),
+  content: z.string().min(1, 'Content/Syllabus is required'),
+  is_open_registration_member: z.boolean().default(false),
+  is_open_registration_mentor: z.boolean().default(false),
+  cover: z.any().optional(),
+})
 
 export default function CourseForm({ defaultValues, onSubmit, isLoading }) {
-  const [form, setForm] = useState({
-    title: '',
-    code: '',
-    description: '',
-    content: '',
-    price: '',
-    is_open_registration_member: false, 
-    is_open_registration_mentor: false, 
-    cover: null,
-    preview: null,
+  const [preview, setPreview] = useState(null)
+
+  const form = useForm({
+    resolver: zodResolver(courseSchema),
+    defaultValues: {
+      title: '',
+      code: '',
+      price: '',
+      description: '',
+      content: '',
+      is_open_registration_member: false,
+      is_open_registration_mentor: false,
+      cover: null,
+    },
   })
 
- 
+  // Load data (edit mode)
   useEffect(() => {
     if (defaultValues) {
-      setForm({
+      form.reset({
         title: defaultValues.title || '',
         code: defaultValues.code || '',
-        description: defaultValues.description || '',
-        content: defaultValues.content || defaultValues.description || '',
         price: defaultValues.price || 0,
-
+        description: defaultValues.description || '',
+        content: defaultValues.content || '',
         is_open_registration_member:
           defaultValues.is_open_registration_member || false,
         is_open_registration_mentor:
           defaultValues.is_open_registration_mentor || false,
-        cover: null,
-        preview: defaultValues.cover_uri,
       })
+      if (defaultValues.cover_uri) {
+        setPreview(defaultValues.cover_uri)
+      }
     }
-  }, [defaultValues])
+  }, [defaultValues, form])
 
-  const handleFile = (e) => {
-    const f = e.target.files[0]
-    if (f) setForm((p) => ({ ...p, cover: f, preview: URL.createObjectURL(f) }))
-  }
-
-  // Handle perubahan input text & checkbox
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }))
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      form.setValue('cover', file, { shouldValidate: true })
+      setPreview(URL.createObjectURL(file))
+    }
   }
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault()
-        onSubmit(form)
-      }}
+    <BaseForm
+      formConfig={form}
+      onSubmit={onSubmit}
       className="grid grid-cols-1 gap-6 rounded-lg border bg-white p-6 shadow-sm md:grid-cols-12"
     >
-      {/* --- KIRI (Info Utama) --- */}
+      {/* KIRI */}
       <div className="space-y-4 md:col-span-8">
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="mb-1 block text-sm font-semibold text-gray-700">
-              Course Name *
-            </label>
-            <input
-              name="title"
-              required
-              className="w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              value={form.title}
-              onChange={handleChange}
-              placeholder="e.g. Fullstack Javascript"
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Course Name *</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. Fullstack Javascript" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-          <div>
-            <label className="mb-1 block text-sm font-semibold text-gray-700">
-              Course Code *
-            </label>
-            <input
-              name="code"
-              required
-              className="w-full rounded-md border border-gray-300 p-2 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              value={form.code}
-              onChange={handleChange}
-              placeholder="e.g. FSJS2025"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-semibold text-gray-700">
-            Price (IDR) *
-          </label>
-          <input
-            name="price"
-            type="number"
-            required
-            min="0"
-            className="w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            value={form.price}
-            onChange={handleChange}
+          <FormField
+            control={form.control}
+            name="code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Course Code *</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. FSJS2025" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
 
-        {/* --- BAGIAN STATUS  --- */}
+        <FormField
+          control={form.control}
+          name="price"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Price (IDR) *</FormLabel>
+              <FormControl>
+                <Input type="number" min="0" placeholder="0" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Status Checkboxes */}
         <div>
-          <label className="mb-2 block text-sm font-semibold text-gray-700">
-            Registration Status
-          </label>
+          <FormLabel className="mb-2 block">Registration Status</FormLabel>
           <div className="grid grid-cols-2 gap-4">
-            {/* Checkbox Member */}
-            <label
-              className={`flex cursor-pointer items-center space-x-3 rounded-md border p-3 transition-colors ${form.is_open_registration_member ? 'border-blue-200 bg-blue-50' : 'hover:bg-gray-50'}`}
-            >
-              <input
-                type="checkbox"
-                name="is_open_registration_member"
-                checked={form.is_open_registration_member}
-                onChange={handleChange}
-                className="h-5 w-5 rounded text-blue-600 focus:ring-blue-500"
-              />
-              <div>
-                <span className="block text-sm font-medium text-gray-900">
-                  Open for Member
-                </span>
-                <span className="block text-xs text-gray-500">
-                  Allow students to enroll
-                </span>
-              </div>
-            </label>
+            <FormField
+              control={form.control}
+              name="is_open_registration_member"
+              render={({ field }) => (
+                <FormItem
+                  // Logic Klik Container
+                  onClick={(e) => {
+                    if (e.target.type !== 'checkbox') {
+                      field.onChange(!field.value)
+                    }
+                  }}
+                  className={`flex cursor-pointer items-center space-y-0 space-x-3 rounded-md border p-3 transition-colors ${
+                    field.value
+                      ? 'border-blue-200 bg-blue-50'
+                      : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <FormControl>
+                    <input
+                      type="checkbox"
+                      checked={field.value}
+                      onChange={field.onChange}
+                      className="h-5 w-5 cursor-pointer rounded text-blue-600 focus:ring-blue-500"
+                    />
+                  </FormControl>
+                  <div>
+                    <span className="block text-sm font-medium text-gray-900 select-none">
+                      Open for Member
+                    </span>
+                    <span className="block text-xs text-gray-500 select-none">
+                      Allow students to enroll
+                    </span>
+                  </div>
+                </FormItem>
+              )}
+            />
 
-            {/* Checkbox Mentor */}
-            <label
-              className={`flex cursor-pointer items-center space-x-3 rounded-md border p-3 transition-colors ${form.is_open_registration_mentor ? 'border-indigo-200 bg-indigo-50' : 'hover:bg-gray-50'}`}
-            >
-              <input
-                type="checkbox"
-                name="is_open_registration_mentor"
-                checked={form.is_open_registration_mentor}
-                onChange={handleChange}
-                className="h-5 w-5 rounded text-indigo-600 focus:ring-indigo-500"
-              />
-              <div>
-                <span className="block text-sm font-medium text-gray-900">
-                  Open for Mentor
-                </span>
-                <span className="block text-xs text-gray-500">
-                  Allow mentors to apply
-                </span>
-              </div>
-            </label>
+            <FormField
+              control={form.control}
+              name="is_open_registration_mentor"
+              render={({ field }) => (
+                <FormItem
+                  // Logic Klik Container
+                  onClick={(e) => {
+                    if (e.target.type !== 'checkbox') {
+                      field.onChange(!field.value)
+                    }
+                  }}
+                  className={`flex cursor-pointer items-center space-y-0 space-x-3 rounded-md border p-3 transition-colors ${
+                    field.value
+                      ? 'border-indigo-200 bg-indigo-50'
+                      : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <FormControl>
+                    <input
+                      type="checkbox"
+                      checked={field.value}
+                      onChange={field.onChange}
+                      className="h-5 w-5 cursor-pointer rounded text-indigo-600 focus:ring-indigo-500"
+                    />
+                  </FormControl>
+                  <div>
+                    <span className="block text-sm font-medium text-gray-900 select-none">
+                      Open for Mentor
+                    </span>
+                    <span className="block text-xs text-gray-500 select-none">
+                      Allow mentors to apply
+                    </span>
+                  </div>
+                </FormItem>
+              )}
+            />
           </div>
         </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-semibold text-gray-700">
-            Full Content / Syllabus *
-          </label>
-          <textarea
-            name="content"
-            required
-            className="h-64 w-full rounded-md border border-gray-300 bg-gray-50 p-2 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            value={form.content}
-            onChange={handleChange}
-            placeholder="Detailed explanation of the course, markdown supported..."
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="content"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Full Content / Syllabus *</FormLabel>
+              <FormControl>
+                <textarea
+                  {...field}
+                  className="border-input placeholder:text-muted-foreground focus-visible:ring-ring h-64 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Detailed explanation of the course..."
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
 
-      {/* --- KANAN (Gambar & Deskripsi Singkat) --- */}
+      {/* KANAN */}
       <div className="space-y-4 md:col-span-4">
         <div>
-          <label className="mb-1 block text-sm font-semibold text-gray-700">
-            Thumbnail Image
-          </label>
-          <div className="mt-1 flex justify-center rounded-md border-2 border-dashed border-gray-300 px-6 pt-5 pb-6 transition hover:bg-gray-50">
-            <div className="space-y-1 text-center">
-              {form.preview ? (
+          <FormLabel className="mb-2 block">Thumbnail Image</FormLabel>
+
+          {preview ? (
+            // STATE: PREVIEW (Sudah ada gambar)
+            <div className="mt-1 flex justify-center rounded-md border-2 border-dashed border-gray-300 px-6 pt-5 pb-6">
+              <div className="space-y-1 text-center">
                 <div className="relative mb-2 h-40 w-full">
                   <img
-                    src={form.preview}
+                    src={preview}
                     className="mx-auto h-full rounded object-cover"
                     alt="Preview"
                   />
                   <button
                     type="button"
-                    onClick={() =>
-                      setForm((p) => ({ ...p, cover: null, preview: null }))
-                    }
+                    onClick={() => {
+                      form.setValue('cover', null)
+                      setPreview(null)
+                    }}
                     className="mt-1 text-xs text-red-500 underline"
                   >
                     Remove
                   </button>
                 </div>
-              ) : (
+              </div>
+            </div>
+          ) : (
+            // STATE: UPLOAD (Belum ada gambar)
+            <label
+              htmlFor="file-upload"
+              className="mt-1 flex cursor-pointer justify-center rounded-md border-2 border-dashed border-gray-300 px-6 pt-5 pb-6 transition hover:bg-gray-50"
+            >
+              <div className="space-y-1 text-center">
                 <div className="flex flex-col items-center">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    stroke="currentColor"
-                    fill="none"
-                    viewBox="0 0 48 48"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                  <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
+                  <div className="mt-2 flex text-sm text-gray-600">
+                    <span className="font-medium text-blue-600 focus-within:outline-none hover:text-blue-500">
+                      Click to Upload
+                    </span>
+                    <input
+                      id="file-upload"
+                      name="file-upload"
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      onChange={handleFileChange}
                     />
-                  </svg>
-                  <div className="flex text-sm text-gray-600">
-                    <label
-                      htmlFor="file-upload"
-                      className="relative cursor-pointer rounded-md bg-white font-medium text-blue-600 focus-within:outline-none hover:text-blue-500"
-                    >
-                      <span>Upload a file</span>
-                      <input
-                        id="file-upload"
-                        name="file-upload"
-                        type="file"
-                        accept="image/*"
-                        className="sr-only"
-                        onChange={handleFile}
-                      />
-                    </label>
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-gray-500">
                     PNG, JPG, GIF up to 5MB
                   </p>
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
+            </label>
+          )}
         </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-semibold text-gray-700">
-            Short Description
-          </label>
-          <textarea
-            name="description"
-            className="h-32 w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            value={form.description}
-            onChange={handleChange}
-            placeholder="Brief summary for card view..."
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Short Description</FormLabel>
+              <FormControl>
+                <textarea
+                  {...field}
+                  className="border-input placeholder:text-muted-foreground focus-visible:ring-ring h-32 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Brief summary for card view..."
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
 
-      {/* --- TOMBOL AKSI --- */}
       <div className="mt-2 flex justify-end gap-3 border-t pt-6 md:col-span-12">
         <Button
           type="button"
@@ -275,6 +329,6 @@ export default function CourseForm({ defaultValues, onSubmit, isLoading }) {
           )}
         </Button>
       </div>
-    </form>
+    </BaseForm>
   )
 }

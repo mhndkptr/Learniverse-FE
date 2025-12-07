@@ -5,7 +5,7 @@ export default function CourseTable({
   courses,
   onEdit,
   onDelete,
-  onToggleStatus, 
+  onToggleStatus,
 }) {
   // Helper render badge status
   const renderStatusBadge = (isOpen, onClick) => {

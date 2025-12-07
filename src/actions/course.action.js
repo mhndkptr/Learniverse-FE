@@ -2,7 +2,9 @@
 
 import request, { handleAxiosError } from '@/utils/baseRequest'
 
-// GET ALL COURSE
+/* =========================================================
+   FRONTLINER SECTION
+   ========================================================= */
 export async function getAllCourseAction({ params }) {
   try {
     const res = await request.get('/course', { params })
@@ -12,7 +14,6 @@ export async function getAllCourseAction({ params }) {
   }
 }
 
-// GET COURSE BY ID
 export async function getCourseByIdAction({ id }) {
   try {
     const res = await request.get(`/course/${id}`)
@@ -28,5 +29,54 @@ export async function createCourseTransactionAction({ body }) {
     return res.data
   } catch (error) {
     return handleAxiosError(error)
+  }
+}
+
+/* =========================================================
+   BACKOFFICE / ADMIN SECTION 
+   ========================================================= */
+
+export const getAllCourseAdminAction = async ({ params }) => {
+  try {
+    const res = await request.get('/course', { params })
+    return res.data
+  } catch (e) {
+    return handleAxiosError(e)
+  }
+}
+
+export const getCourseByIdAdminAction = async ({ id }) => {
+  try {
+    const res = await request.get(`/course/${id}`)
+    return res.data
+  } catch (e) {
+    return handleAxiosError(e)
+  }
+}
+
+export const createCourseAction = async ({ body }) => {
+  try {
+    const res = await request.post('/course', body)
+    return res.data
+  } catch (e) {
+    return handleAxiosError(e)
+  }
+}
+
+export async function updateCourseAction({ id, body }) {
+  try {
+    const res = await request.patch(`/course/${id}`, body)
+    return res.data
+  } catch (error) {
+    return handleAxiosError(error)
+  }
+}
+
+export const deleteCourseAction = async ({ id }) => {
+  try {
+    const res = await request.delete(`/course/${id}`)
+    return res.data
+  } catch (e) {
+    return handleAxiosError(e)
   }
 }

@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/form'
 import BaseForm from '@/components/_shared/BaseForm'
 
-// Schema Validasi
+// Schema Validasi (Backend)
 const courseSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(150),
   code: z
@@ -49,7 +49,7 @@ export default function CourseForm({ defaultValues, onSubmit, isLoading }) {
     },
   })
 
-  // Load data (edit mode)
+  // Load data edit
   useEffect(() => {
     if (defaultValues) {
       form.reset({
@@ -138,7 +138,6 @@ export default function CourseForm({ defaultValues, onSubmit, isLoading }) {
               name="is_open_registration_member"
               render={({ field }) => (
                 <FormItem
-                  // Logic Klik Container
                   onClick={(e) => {
                     if (e.target.type !== 'checkbox') {
                       field.onChange(!field.value)
@@ -175,7 +174,6 @@ export default function CourseForm({ defaultValues, onSubmit, isLoading }) {
               name="is_open_registration_mentor"
               render={({ field }) => (
                 <FormItem
-                  // Logic Klik Container
                   onClick={(e) => {
                     if (e.target.type !== 'checkbox') {
                       field.onChange(!field.value)
@@ -234,7 +232,6 @@ export default function CourseForm({ defaultValues, onSubmit, isLoading }) {
           <FormLabel className="mb-2 block">Thumbnail Image</FormLabel>
 
           {preview ? (
-            // STATE: PREVIEW (Sudah ada gambar)
             <div className="mt-1 flex justify-center rounded-md border-2 border-dashed border-gray-300 px-6 pt-5 pb-6">
               <div className="space-y-1 text-center">
                 <div className="relative mb-2 h-40 w-full">
@@ -257,7 +254,6 @@ export default function CourseForm({ defaultValues, onSubmit, isLoading }) {
               </div>
             </div>
           ) : (
-            // STATE: UPLOAD (Belum ada gambar)
             <label
               htmlFor="file-upload"
               className="mt-1 flex cursor-pointer justify-center rounded-md border-2 border-dashed border-gray-300 px-6 pt-5 pb-6 transition hover:bg-gray-50"

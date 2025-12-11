@@ -14,6 +14,7 @@ import { useDebounce } from '@/hooks/use-debounce.hook'
 import { useBackofficeBreadcrumb } from '@/contexts/backoffice-breadcrumb.context'
 import { formatCurrency } from '@/utils/helper'
 
+// REUSABLE COMPONENTS
 import BaseTable from '@/components/_shared/BaseTable'
 import PaginationControls from '@/components/layout/pagination/PaginationControls'
 import ConfirmDialogDelete from '@/components/core/backoffice/course/ConfirmDialogDelete'
@@ -104,10 +105,8 @@ export default function BackofficeCoursePage() {
 
   const handleRowAction = (action, row) => {
     if (action === 'view') {
-      // Ke Halaman Detail (View Only)
       router.push(`/backoffice/course/${row.id}`)
     } else if (action === 'edit') {
-      // Ke Halaman Edit (Manage)
       router.push(`/backoffice/course/${row.id}/edit`)
     } else if (action === 'delete') {
       setDeleteId(row.id)
@@ -128,7 +127,7 @@ export default function BackofficeCoursePage() {
     setSortConfig({ key, direction })
   }
 
-  // --- COLUMNS CONFIG ---
+  // --- COLUMN CONFIG ---
   const columns = useMemo(
     () => [
       {
@@ -202,7 +201,6 @@ export default function BackofficeCoursePage() {
         header: 'Action',
         render: (row) => (
           <div className="flex items-center gap-1">
-            {/* View Button */}
             <Button
               variant="ghost"
               size="icon"
@@ -213,7 +211,6 @@ export default function BackofficeCoursePage() {
               <Eye className="size-4" />
             </Button>
 
-            {/* Edit Button */}
             <Button
               variant="ghost"
               size="icon"
@@ -224,7 +221,6 @@ export default function BackofficeCoursePage() {
               <Pencil className="size-4" />
             </Button>
 
-            {/* Delete Button */}
             <Button
               variant="ghost"
               size="icon"
@@ -283,7 +279,7 @@ export default function BackofficeCoursePage() {
         </Button>
       </div>
 
-      {/* TABLE CONTAINER  */}
+      {/* TABLE CONTAINER */}
       <div className="flex min-h-[65vh] flex-col justify-between rounded-md border bg-white">
         <div className="flex-1">
           <BaseTable
@@ -299,7 +295,6 @@ export default function BackofficeCoursePage() {
           />
         </div>
 
-        {/* PAGINATION */}
         {meta && (
           <div className="border-t p-4">
             <PaginationControls

@@ -20,7 +20,7 @@ export default function ConfirmDialogDelete({
       open={isOpen}
       onOpenChange={(val) => !val && onClose()}
       dialogTitle={title}
-      dialogTitleIcon={<AlertTriangle className="h-5 w-5 text-red-600" />}
+      dialogTitleIcon={<AlertTriangle className="size-5 text-red-600" />}
       showDefaultCloseButton={false}
       containerClassName="sm:max-w-md"
     >
@@ -49,7 +49,7 @@ export default function ConfirmDialogDelete({
           >
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...
+                <Loader2 className="mr-2 size-4 animate-spin" /> Processing...
               </>
             ) : (
               confirmText

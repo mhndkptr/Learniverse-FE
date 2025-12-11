@@ -7,7 +7,7 @@ import { useGetCourseById } from '@/hooks/course.hook'
 import Image from 'next/image'
 import { useState } from 'react'
 
-export default function CourseDetailPage({ id }) {
+export default function CourseDetailPageComponent({ id }) {
   const { course, isLoading } = useGetCourseById({ courseId: id })
   const [isEnrollDialogOpen, setIsEnrollDialogOpen] = useState(false)
 

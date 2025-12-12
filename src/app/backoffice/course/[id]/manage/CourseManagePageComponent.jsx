@@ -1,12 +1,22 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+<<<<<<< Updated upstream
 import { useMemo, useState } from 'react'
+=======
+import { useMemo, useState } from 'react' // Tambahkan useState
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import request, { handleAxiosError } from '@/utils/baseRequest'
+>>>>>>> Stashed changes
 import {
   useGetCourseByIdAdmin,
   useUpdateCourseAdminMutation,
 } from '@/hooks/course.hook'
 import CourseForm from '@/components/core/backoffice/course/CourseForm'
+// Import Component Confirm Dialog yang sudah ada
+import ConfirmDialogDelete from '@/components/core/backoffice/course/ConfirmDialogDelete'
+
 import {
   Loader2,
   ArrowLeft,
@@ -18,7 +28,12 @@ import {
   Plus,
   Trash2,
   Pencil,
+<<<<<<< Updated upstream
   SquareArrowOutUpRight,
+=======
+  Check,
+  X,
+>>>>>>> Stashed changes
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -30,9 +45,38 @@ import ConfirmDialogDelete from '@/components/core/backoffice/course/ConfirmDial
 import { useDeleteModuleMutation } from '@/hooks/module.hook'
 import { se } from 'date-fns/locale'
 
+// --- API HELPER UNTUK MENTOR ---
+const updateMentorStatusAction = async ({ id, status }) => {
+  try {
+    const res = await request.patch(`/mentor/${id}`, { status })
+    return res.data
+  } catch (err) {
+    throw handleAxiosError(err)
+  }
+}
+
+// API Helper Delete Mentor
+const deleteMentorAction = async (id) => {
+  try {
+    const res = await request.delete(`/mentor/${id}`)
+    return res.data
+  } catch (err) {
+    throw handleAxiosError(err)
+  }
+}
+
 export default function CourseManagePageComponent({ id }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
+
+  // State untuk Dialog Delete Mentor
+  const [deleteMentorId, setDeleteMentorId] = useState(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+
+  // --- DATA FETCHING ---
   const { course, isLoading, refetch } = useGetCourseByIdAdmin({ courseId: id })
+
+  // --- MUTATIONS ---
   const updateCourseMutation = useUpdateCourseAdminMutation({
     onSuccess: () => refetch(),
   })
@@ -56,6 +100,55 @@ export default function CourseManagePageComponent({ id }) {
     status: false,
     data: null,
   })
+
+  // Mutation untuk Approve/Reject Mentor
+  const mentorStatusMutation = useMutation({
+    mutationFn: updateMentorStatusAction,
+    onSuccess: (_, variables) => {
+      toast.success(
+        `Mentor ${variables.status === 'ACCEPTED' ? 'accepted' : 'rejected'} successfully`
+      )
+      queryClient.invalidateQueries(['getCourseByIdAdmin', id])
+      refetch()
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Failed to update mentor status')
+    },
+  })
+
+  // Mutation untuk Delete Mentor
+  const deleteMentorMutation = useMutation({
+    mutationFn: deleteMentorAction,
+    onSuccess: () => {
+      toast.success('Mentor removed successfully')
+      queryClient.invalidateQueries(['getCourseByIdAdmin', id])
+      refetch()
+      // Tutup dialog setelah sukses
+      setIsDeleteDialogOpen(false)
+      setDeleteMentorId(null)
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Failed to remove mentor')
+    },
+  })
+
+  // Handler update status
+  const handleMentorAction = (mentorId, newStatus) => {
+    mentorStatusMutation.mutate({ id: mentorId, status: newStatus })
+  }
+
+  // Handler Memicu Dialog Delete (Bukan langsung delete)
+  const handleTriggerDelete = (mentorId) => {
+    setDeleteMentorId(mentorId)
+    setIsDeleteDialogOpen(true)
+  }
+
+  // Handler Eksekusi Delete (Dipanggil dari Dialog)
+  const handleConfirmDelete = () => {
+    if (deleteMentorId) {
+      deleteMentorMutation.mutate(deleteMentorId)
+    }
+  }
 
   // --- KOLOM TABEL RELASI ---
   const moduleColumns = useMemo(
@@ -116,27 +209,68 @@ export default function CourseManagePageComponent({ id }) {
       {
         key: 'status',
         header: 'Status',
-        render: (row) => (
-          <Badge
-            className={
-              row.status === 'ACCEPTED' ? 'bg-green-600' : 'bg-yellow-600'
-            }
-          >
-            {row.status}
-          </Badge>
-        ),
+        render: (row) => {
+          let colorClass = 'bg-gray-500'
+          if (row.status === 'ACCEPTED')
+            colorClass = 'bg-green-600 hover:bg-green-700'
+          if (row.status === 'REJECTED')
+            colorClass = 'bg-red-600 hover:bg-red-700'
+          if (row.status === 'ON_REVIEW')
+            colorClass = 'bg-yellow-600 hover:bg-yellow-700'
+
+          return (
+            <Badge className={`${colorClass} text-white`}>
+              {row.status.replace('_', ' ')}
+            </Badge>
+          )
+        },
       },
       {
         key: 'actions',
         header: 'Action',
-        render: (row) => (
-          <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600">
-            <Trash2 className="size-4" />
-          </Button>
-        ),
+        render: (row) => {
+          // Jika status ON_REVIEW, tampilkan tombol Accept & Decline
+          if (row.status === 'ON_REVIEW') {
+            return (
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  className="h-8 bg-green-600 text-white hover:bg-green-700"
+                  onClick={() => handleMentorAction(row.id, 'ACCEPTED')}
+                  disabled={mentorStatusMutation.isPending}
+                  title="Accept Mentor"
+                >
+                  <Check className="mr-1 size-3" /> Accept
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-8 bg-red-600 text-white hover:bg-red-700"
+                  onClick={() => handleMentorAction(row.id, 'REJECTED')}
+                  disabled={mentorStatusMutation.isPending}
+                  title="Decline Mentor"
+                >
+                  <X className="mr-1 size-3" /> Decline
+                </Button>
+              </div>
+            )
+          }
+
+          // Tombol DELETE membuka Dialog
+          return (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 text-gray-400 hover:text-red-600"
+              title="Remove Mentor"
+              onClick={() => handleTriggerDelete(row.id)}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          )
+        },
       },
     ],
-    []
+    [mentorStatusMutation.isPending]
   )
 
   const quizColumns = useMemo(
@@ -265,7 +399,6 @@ export default function CourseManagePageComponent({ id }) {
         <TabsContent value="general" className="mt-6">
           <CourseForm
             defaultValues={course}
-            mentors={[]}
             onSubmit={(values) =>
               updateCourseMutation.mutate({ id, body: values })
             }
@@ -310,18 +443,17 @@ export default function CourseManagePageComponent({ id }) {
           <div className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm">
             <div>
               <h3 className="text-lg font-semibold">Assigned Mentors</h3>
-              <p className="text-sm text-gray-500">Manage assigned mentors.</p>
+              <p className="text-sm text-gray-500">
+                Manage mentor applications and approvals.
+              </p>
             </div>
-            <Button size="sm" variant="primary">
-              <Plus className="mr-2 size-4" /> Add Mentor
-            </Button>
           </div>
           <div className="rounded-lg border bg-white shadow-sm">
             <BaseTable
               data={course.mentors || []}
               columns={mentorColumns}
               serverSide={false}
-              searchFields={['user.name']}
+              searchFields={['user.name', 'user.email']}
               onRowAction={() => {}}
             />
           </div>

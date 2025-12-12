@@ -57,7 +57,7 @@ const data = {
       items: [
         {
           title: 'Overview',
-          url: '/backoffice/overview',
+          url: '/backoffice',
           icon: Home,
           isActive: true,
           items: null,

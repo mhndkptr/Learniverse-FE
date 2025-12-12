@@ -35,6 +35,8 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import BaseTable from '@/components/_shared/BaseTable'
 import { Badge } from '@/components/ui/badge'
+import { se } from 'date-fns/locale'
+import { useDeleteQuizMutation } from '@/hooks/quiz.hook'
 
 // API Helper Delete Mentor
 const deleteMentorAction = async (id) => {
@@ -53,6 +55,20 @@ export default function CourseManagePageComponent({ id }) {
   // --- STATE ---
   const [deleteMentorId, setDeleteMentorId] = useState(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const { course, isLoading, refetch } = useGetCourseByIdAdmin({ courseId: id })
+  const updateCourseMutation = useUpdateCourseAdminMutation({
+    onSuccess: () => refetch(),
+  })
+  const { deleteModuleMutation } = useDeleteModuleMutation({
+    successAction: () => {
+      setShowDelete({ status: false, data: null, mutation: null })
+    },
+  })
+  const { deleteQuizMutation } = useDeleteQuizMutation({
+    successAction: () => {
+      setShowDelete({ status: false, data: null, mutation: null })
+    },
+  })
 
   const [showDelete, setShowDelete] = useState({
     status: false,
@@ -64,20 +80,6 @@ export default function CourseManagePageComponent({ id }) {
   const [showEditModule, setShowEditModule] = useState({
     status: false,
     data: null,
-  })
-
-  // --- DATA FETCHING ---
-  const { course, isLoading, refetch } = useGetCourseByIdAdmin({ courseId: id })
-
-  // --- MUTATIONS ---
-  const updateCourseMutation = useUpdateCourseAdminMutation({
-    onSuccess: () => refetch(),
-  })
-
-  const { deleteModuleMutation } = useDeleteModuleMutation({
-    successAction: () => {
-      setShowDelete({ status: false, data: null, mutation: null })
-    },
   })
 
   // Mutation untuk Delete Mentor
@@ -125,7 +127,9 @@ export default function CourseManagePageComponent({ id }) {
             <Button
               size="icon"
               variant="ghost"
-              onClick={() => window.open(row.modul_uri, '_blank')}
+              onClick={() => {
+                window.open(row.modul_uri, '_blank')
+              }}
               className="h-8 w-8 text-blue-600"
             >
               <SquareArrowOutUpRight className="size-4" />
@@ -241,6 +245,11 @@ export default function CourseManagePageComponent({ id }) {
               size="icon"
               variant="ghost"
               className="h-8 w-8 text-amber-600"
+              onClick={() =>
+                router.push(
+                  `/backoffice/course/${id}/manage/quiz/${row.id}/edit`
+                )
+              }
             >
               <Pencil className="size-4" />
             </Button>
@@ -248,6 +257,13 @@ export default function CourseManagePageComponent({ id }) {
               size="icon"
               variant="ghost"
               className="h-8 w-8 text-red-600"
+              onClick={() =>
+                setShowDelete({
+                  status: true,
+                  data: row,
+                  mutation: deleteQuizMutation,
+                })
+              }
             >
               <Trash2 className="size-4" />
             </Button>
@@ -409,7 +425,13 @@ export default function CourseManagePageComponent({ id }) {
               <h3 className="text-lg font-semibold">Quizzes</h3>
               <p className="text-sm text-gray-500">Manage quizzes.</p>
             </div>
-            <Button size="sm" variant="primary">
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={() => {
+                router.push(`/backoffice/course/${id}/manage/quiz/create`)
+              }}
+            >
               <Plus className="mr-2 size-4" /> Create Quiz
             </Button>
           </div>
@@ -456,20 +478,31 @@ export default function CourseManagePageComponent({ id }) {
         onOpenChange={() => setShowAddModule({ status: false })}
         onSuccess={() => refetch()}
       />
+
       <BackofficeCourseModuleEditDialog
         course={course}
         data={showEditModule}
-        onOpenChange={() => setShowEditModule({ status: false, data: null })}
-        onSuccess={() => refetch()}
+        onOpenChange={() => {
+          setShowEditModule({
+            data:
+              !showEditModule.status && showEditModule.data
+                ? showEditModule.data
+                : null,
+            status: !showEditModule.status,
+          })
+        }}
+        onSuccess={() => {}}
       />
 
       {/* 2. Generic Delete Dialog (For Module) */}
       <ConfirmDialogDelete
         isOpen={showDelete.status}
-        onClose={() => setShowDelete({ status: false, data: null })}
+        onClose={() =>
+          setShowDelete({ status: false, data: null, mutation: null })
+        }
         onConfirm={async () => {
           setIsDeleting(true)
-          await showDelete.mutation.mutate({ id: showDelete.data.id })
+          await showDelete.mutation.mutate({ id: showDelete?.data?.id })
           setIsDeleting(false)
           refetch()
         }}

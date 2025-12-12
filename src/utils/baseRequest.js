@@ -46,7 +46,9 @@ request.interceptors.response.use(
   async (error) => {
     if (error.code === 'ERR_NETWORK') {
       await logout()
-      window.location.replace('/auth/login')
+      if (typeof window !== 'undefined') {
+        window.location.replace('/auth/login')
+      }
       return Promise.reject(error)
     }
     const originalRequest = error.config
@@ -83,7 +85,9 @@ request.interceptors.response.use(
         return request(originalRequest)
       } catch (refreshError) {
         await logout()
-        window.location.href = '/auth/login'
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth/login'
+        }
         return Promise.reject(refreshError)
       }
     } else if (error?.response?.status === 403) {
@@ -106,6 +110,7 @@ export function handleAxiosError(error) {
         error.response.data?.message || error.message || 'Unknown API error',
       data: error.response?.data?.data || null,
       code: error.response.data?.code || error.response.status,
+      errors: error.response.data?.errors || null,
     }
   } else if (axios.isAxiosError(error)) {
     errorResponse = {

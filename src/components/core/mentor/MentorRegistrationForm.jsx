@@ -2,9 +2,13 @@
 
 import { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
+import { useMentorRegistrationMutation } from '@/hooks/mentor.hook'
+import { useAuth } from '@/contexts/auth.context'
 
 export default function MentorRegistrationForm() {
+  const { user } = useAuth()
   const [formData, setFormData] = useState({
+    bio: '',
     reason: '',
     motivation: '',
     cvUrl: '',
@@ -15,7 +19,19 @@ export default function MentorRegistrationForm() {
 
   const [showPaymentName, setShowPaymentName] = useState(false)
   const [showPaymentAccount, setShowPaymentAccount] = useState(false)
-  const [loading, setLoading] = useState(false)
+
+  const { addMentorRegistrationMutation } = useMentorRegistrationMutation({
+    successAction: () => {
+      setFormData({
+        reason: '',
+        motivation: '',
+        cvUrl: '',
+        portfolioUrl: '',
+        paymentAccountName: '',
+        paymentAccount: '',
+      })
+    },
+  })
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -27,23 +43,17 @@ export default function MentorRegistrationForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
-
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Form submitted:', formData)
-      // Reset form after successful submission
-      setFormData({
-        reason: '',
-        motivation: '',
-        cvUrl: '',
-        portfolioUrl: '',
-        paymentAccountName: '',
-        paymentAccount: '',
-      })
-      setLoading(false)
-      alert('Registration successful!')
-    }, 1000)
+    addMentorRegistrationMutation.mutate({
+      payload: {
+        bio: formData.bio,
+        reason: formData.reason,
+        motivation: formData.motivation,
+        cv_uri: formData.cvUrl,
+        portfolio_uri: formData.portfolioUrl,
+        user_id: user.id,
+        course_id: Joi.string().uuid().required(),
+      },
+    })
   }
 
   return (
@@ -54,6 +64,24 @@ export default function MentorRegistrationForm() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Reason Field */}
+        <div>
+          <label
+            htmlFor="bio"
+            className="text-foreground mb-2 block text-sm font-medium"
+          >
+            Bio
+          </label>
+          <textarea
+            id="bio"
+            name="bio"
+            value={formData.bio}
+            onChange={handleInputChange}
+            placeholder="Enter your bio to be a mentor"
+            className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            rows={4}
+            required
+          />
+        </div>
         <div>
           <label
             htmlFor="reason"
@@ -194,10 +222,12 @@ export default function MentorRegistrationForm() {
         {/* Register Button */}
         <button
           type="submit"
-          disabled={loading}
+          disabled={addMentorRegistrationMutation.isPending}
           className="w-full rounded-lg bg-blue-900 px-4 py-3 font-semibold text-white transition-colors duration-200 hover:bg-blue-800 disabled:bg-gray-400"
         >
-          {loading ? 'Registering...' : 'Register'}
+          {addMentorRegistrationMutation.isPending
+            ? 'Registering...'
+            : 'Register'}
         </button>
       </form>
     </div>

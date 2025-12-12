@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   useGetCourseByIdAdmin,
   useUpdateCourseAdminMutation,
@@ -9,7 +9,6 @@ import {
 import CourseForm from '@/components/core/backoffice/course/CourseForm'
 import {
   Loader2,
-  AlertCircle,
   ArrowLeft,
   BookOpen,
   Users,
@@ -19,17 +18,43 @@ import {
   Plus,
   Trash2,
   Pencil,
+  SquareArrowOutUpRight,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import BaseTable from '@/components/_shared/BaseTable'
 import { Badge } from '@/components/ui/badge'
+import BackofficeCourseModuleAddDialog from '@/components/core/backoffice/course/module/BackofficeCourseModuleAddDialog'
+import BackofficeCourseModuleEditDialog from '@/components/core/backoffice/course/module/BackofficeCourseModuleEditDialog'
+import ConfirmDialogDelete from '@/components/core/backoffice/course/ConfirmDialogDelete'
+import { useDeleteModuleMutation } from '@/hooks/module.hook'
+import { se } from 'date-fns/locale'
 
 export default function CourseManagePageComponent({ id }) {
   const router = useRouter()
   const { course, isLoading, refetch } = useGetCourseByIdAdmin({ courseId: id })
   const updateCourseMutation = useUpdateCourseAdminMutation({
     onSuccess: () => refetch(),
+  })
+  const { deleteModuleMutation } = useDeleteModuleMutation({
+    successAction: () => {
+      setShowDelete({ status: false, data: null, mutation: null })
+    },
+  })
+
+  const [showDelete, setShowDelete] = useState({
+    status: false,
+    data: null,
+    mutation: null,
+  })
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const [showAddModule, setShowAddModule] = useState({
+    status: false,
+  })
+  const [showEditModule, setShowEditModule] = useState({
+    status: false,
+    data: null,
   })
 
   // --- KOLOM TABEL RELASI ---
@@ -45,7 +70,21 @@ export default function CourseManagePageComponent({ id }) {
             <Button
               size="icon"
               variant="ghost"
+              onClick={() => window.open(row.modul_uri, '_blank')}
+              className="h-8 w-8 text-blue-600"
+            >
+              <SquareArrowOutUpRight className="size-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
               className="h-8 w-8 text-amber-600"
+              onClick={() =>
+                setShowEditModule({
+                  data: !showEditModule.status && row ? row : null,
+                  status: !showEditModule.status,
+                })
+              }
             >
               <Pencil className="size-4" />
             </Button>
@@ -53,6 +92,13 @@ export default function CourseManagePageComponent({ id }) {
               size="icon"
               variant="ghost"
               className="h-8 w-8 text-red-600"
+              onClick={() =>
+                setShowDelete({
+                  status: true,
+                  data: row,
+                  mutation: deleteModuleMutation,
+                })
+              }
             >
               <Trash2 className="size-4" />
             </Button>
@@ -236,7 +282,15 @@ export default function CourseManagePageComponent({ id }) {
                 Manage learning materials.
               </p>
             </div>
-            <Button size="sm" variant="primary">
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={() =>
+                setShowAddModule({
+                  status: !showAddModule.status,
+                })
+              }
+            >
               <Plus className="mr-2 size-4" /> Add Module
             </Button>
           </div>
@@ -317,6 +371,41 @@ export default function CourseManagePageComponent({ id }) {
           </div>
         </TabsContent>
       </Tabs>
+
+      <BackofficeCourseModuleAddDialog
+        course={course}
+        data={showAddModule}
+        onOpenChange={() => {
+          setShowAddModule({
+            status: !showAddModule.status,
+          })
+        }}
+        onSuccess={() => {}}
+      />
+
+      <BackofficeCourseModuleEditDialog
+        course={course}
+        data={showEditModule}
+        onOpenChange={() => {
+          setShowEditModule({
+            data: !showEditModule.status && row ? row : null,
+            status: !showEditModule.status,
+          })
+        }}
+        onSuccess={() => {}}
+      />
+
+      <ConfirmDialogDelete
+        isOpen={showDelete.status}
+        onClose={() => setShowDelete({ status: false, data: null })}
+        onConfirm={async () => {
+          setIsDeleting(true)
+          await showDelete.mutation.mutate({ id: showDelete.data.id })
+          setIsDeleting(false)
+        }}
+        title="Delete Item"
+        isLoading={isDeleting || false}
+      />
     </div>
   )
 }

@@ -5,9 +5,9 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 export default function CalendarSchedule({
   year: initialYear = 2025,
-  month: initialMonth = 10, 
+  month: initialMonth = 10,
   eventsByDate = {},
-  onDayClick, 
+  onDayClick,
 }) {
   const [currentDate, setCurrentDate] = useState(
     new Date(initialYear, initialMonth, 1)
@@ -66,7 +66,7 @@ export default function CalendarSchedule({
     })
   }
 
-  // Filler bulan berikutnya sampai kelipatan 7
+  // Filler bulan berikutnya
   let nextDay = 1
   while (calendarCells.length % 7 !== 0) {
     calendarCells.push({ date: nextDay++, type: 'other' })

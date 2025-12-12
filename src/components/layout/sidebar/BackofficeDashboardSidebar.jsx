@@ -67,32 +67,12 @@ const data = {
           url: '/backoffice/course',
           icon: LucideBookCopy,
           isActive: true,
-          items: [
-            {
-              title: 'Courses',
-              url: '/backoffice/course',
-            },
-            {
-              title: 'Quiz',
-              url: '/backoffice/quiz',
-            },
-            {
-              title: 'Module',
-              url: '/backoffice/module',
-            },
-          ],
+          items: null,
         },
         {
           title: 'Mentors',
           url: '/backoffice/mentor',
           icon: UserCheck2Icon,
-          isActive: true,
-          items: null,
-        },
-        {
-          title: 'Mentor Registration',
-          url: '/backoffice/mentor/registration',
-          icon: UserPlus2,
           isActive: true,
           items: null,
         },

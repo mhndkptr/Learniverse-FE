@@ -302,28 +302,39 @@ export default function CourseForm({ defaultValues, onSubmit, isLoading }) {
         />
       </div>
 
-      <div className="mt-2 flex justify-end gap-3 border-t pt-6 md:col-span-12">
+      <div className="mt-2 flex justify-between border-t pt-6 md:col-span-12">
         <Button
           type="button"
-          onClick={() => window.history.back()}
-          variant="secondary"
-          className="bg-gray-100 text-gray-800 hover:bg-gray-200"
+          onClick={() => {}}
+          variant="destructive"
+          className="h-max"
         >
-          Cancel
+          Remove Course
         </Button>
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="min-w-[140px] bg-[#0E1B50] text-white hover:bg-blue-900"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
-            </>
-          ) : (
-            'Save Course'
-          )}
-        </Button>
+
+        <div className="flex gap-3">
+          <Button
+            type="button"
+            onClick={() => window.history.back()}
+            variant="secondary"
+            className="bg-gray-100 text-gray-800 hover:bg-gray-200"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="min-w-[140px] bg-[#0E1B50] text-white hover:bg-blue-900"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+              </>
+            ) : (
+              'Save Course'
+            )}
+          </Button>
+        </div>
       </div>
     </BaseForm>
   )

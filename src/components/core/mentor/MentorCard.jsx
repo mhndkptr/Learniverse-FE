@@ -2,6 +2,7 @@
 
 import { ArrowRight } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 
 export default function MentorCard({ mentor }) {
   return (
@@ -29,10 +30,13 @@ export default function MentorCard({ mentor }) {
       </p>
 
       {/* See Detail Button */}
-      <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-amber-700 px-4 py-2 font-medium text-white transition-colors duration-200 hover:bg-amber-800">
+      <Link
+        href={`/backoffice/mentor/${mentor.id}/experience`}
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-amber-700 px-4 py-2 font-medium text-white transition-colors duration-200 hover:bg-amber-800"
+      >
         <span>See Detail</span>
         <ArrowRight className="h-4 w-4" />
-      </button>
+      </Link>
     </div>
   )
 }

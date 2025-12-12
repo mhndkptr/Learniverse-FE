@@ -1,14 +1,10 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-<<<<<<< Updated upstream
-import { useMemo, useState } from 'react'
-=======
 import { useMemo, useState } from 'react' // Tambahkan useState
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import request, { handleAxiosError } from '@/utils/baseRequest'
->>>>>>> Stashed changes
 import {
   useGetCourseByIdAdmin,
   useUpdateCourseAdminMutation,

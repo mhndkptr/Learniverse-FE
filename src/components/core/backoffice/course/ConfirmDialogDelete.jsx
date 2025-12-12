@@ -24,8 +24,8 @@ export default function ConfirmDialogDelete({
       showDefaultCloseButton={false}
       containerClassName="sm:max-w-md"
     >
-      <div className="p-4 md:p-6">
-        <p className="text-muted-foreground text-sm leading-relaxed">
+      <div className="">
+        <p className="text-muted-foreground text-base leading-relaxed">
           {description}
         </p>
 

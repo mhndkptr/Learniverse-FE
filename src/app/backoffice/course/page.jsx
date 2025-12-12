@@ -280,19 +280,66 @@ export default function BackofficeCoursePage() {
       </div>
 
       {/* TABLE CONTAINER */}
-      <div className="flex min-h-[65vh] flex-col justify-between rounded-md border bg-white">
-        <div className="flex-1">
-          <BaseTable
-            data={courses}
-            columns={columns}
-            onRowAction={handleRowAction}
-            serverSide={true}
-            sortConfig={sortConfig}
-            onSortChange={setSortConfig}
-            isLoading={isLoading}
-            searchFields={[]}
-            searchTerm={''}
-          />
+      <div className="flex min-h-[65vh] flex-col justify-between rounded-md bg-white">
+        <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {courses.length > 0 &&
+            courses.map((course) => {
+              return (
+                <div
+                  key={course.id}
+                  className="flex w-full items-center gap-3 rounded-md border p-4 shadow-md"
+                >
+                  <div className="h-full w-[30%] shrink-0 overflow-hidden rounded bg-gray-100">
+                    <img
+                      src={
+                        course.cover_uri ||
+                        course.image_cover ||
+                        '/assets/images/img-image-placeholder.png'
+                      }
+                      alt={course.title}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="w-full min-w-0 space-y-4">
+                    <div className="flex w-full justify-between">
+                      <div>
+                        <p className="line-clamp-1 text-xl font-semibold text-gray-900">
+                          {course.title}
+                        </p>
+                        <p className="font-mono text-xs text-gray-500">
+                          {course.code}
+                        </p>
+                      </div>
+
+                      <div>{formatCurrency(course.price)}</div>
+                    </div>
+                    <div className="flex gap-3">
+                      <StatusBadge
+                        isOpen={course.is_open_registration_member}
+                        openText="Open Member"
+                        closeText="Closed Member"
+                        onClick={() => {}}
+                      />
+
+                      <StatusBadge
+                        isOpen={course.is_open_registration_mentor}
+                        openText="Open Mentor"
+                        closeText="Closed Mentor"
+                        onClick={() => {}}
+                      />
+                    </div>
+                    <Button
+                      className="bg-amber-600 text-white hover:bg-amber-700"
+                      onClick={() =>
+                        router.push(`/backoffice/course/${course.id}/manage`)
+                      }
+                    >
+                      <Pencil className="mr-2 size-4" /> Manage Course
+                    </Button>
+                  </div>
+                </div>
+              )
+            })}
         </div>
 
         {meta && (
@@ -320,7 +367,12 @@ export default function BackofficeCoursePage() {
   )
 }
 
-function StatusBadge({ isOpen, onClick }) {
+function StatusBadge({
+  isOpen,
+  onClick,
+  openText = 'Open',
+  closeText = 'Closed',
+}) {
   return (
     <button
       onClick={onClick}
@@ -330,7 +382,7 @@ function StatusBadge({ isOpen, onClick }) {
           : 'border-red-200 bg-red-100 text-red-800 hover:bg-red-200'
       }`}
     >
-      {isOpen ? 'Open' : 'Closed'}
+      {isOpen ? openText : closeText}
     </button>
   )
 }

@@ -20,7 +20,7 @@ export default function CourseDetailPageComponent({ id }) {
       </div>
     )
 
-  if (!course)
+  if (!course || !id)
     return (
       <div className="flex items-center justify-center">
         <main className="flex w-full flex-col items-center justify-between px-16 py-32">

@@ -2,15 +2,15 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { Eye, Search, Trash2 } from 'lucide-react'
+import { Search, Trash2 } from 'lucide-react'
 
 // Components
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
-// Shared Components (REUSABLE)
 import BaseTable from '@/components/_shared/BaseTable'
 import PaginationControls from '@/components/layout/pagination/PaginationControls'
 import ConfirmDialogDelete from '@/components/core/backoffice/course/ConfirmDialogDelete'
@@ -130,9 +130,7 @@ export default function BackofficeMentorPage() {
 
   // --- HANDLERS ---
   const handleRowAction = (action, row) => {
-    if (action === 'view') {
-      router.push(`/backoffice/mentor/${row.id}`)
-    } else if (action === 'delete') {
+    if (action === 'delete') {
       setDeleteIds(row.allIds)
       setIsDeleteDialogOpen(true)
     }
@@ -223,23 +221,23 @@ export default function BackofficeMentorPage() {
           </Badge>
         ),
       },
-      // ✅ PERBAIKAN: Menggunakan fitur 'actions' bawaan BaseTable
       {
         key: 'actions',
         header: 'ACTION',
         sortable: false,
-        actions: [
-          {
-            label: 'View Detail',
-            action: 'view',
-            icon: Eye,
-          },
-          {
-            label: 'Delete',
-            action: 'delete',
-            icon: Trash2,
-          },
-        ],
+        render: (row) => (
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleRowAction('delete', row)}
+              className="h-8 w-8 text-gray-400 hover:bg-red-50 hover:text-red-600"
+              title="Delete Mentor"
+            >
+              <Trash2 className="h-5 w-5" />
+            </Button>
+          </div>
+        ),
       },
     ],
     []
@@ -264,7 +262,6 @@ export default function BackofficeMentorPage() {
       </div>
 
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-        {/* BaseTable akan otomatis merender Dropdown Menu dari props 'actions' di columns */}
         <BaseTable
           data={groupedMentors}
           columns={columns}

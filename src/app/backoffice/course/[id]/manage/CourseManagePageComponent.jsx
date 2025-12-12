@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useMemo, useState } from 'react' // Tambahkan useState
+import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import request, { handleAxiosError } from '@/utils/baseRequest'
@@ -9,9 +9,13 @@ import {
   useGetCourseByIdAdmin,
   useUpdateCourseAdminMutation,
 } from '@/hooks/course.hook'
+import { useDeleteModuleMutation } from '@/hooks/module.hook'
+
+// Components
 import CourseForm from '@/components/core/backoffice/course/CourseForm'
-// Import Component Confirm Dialog yang sudah ada
 import ConfirmDialogDelete from '@/components/core/backoffice/course/ConfirmDialogDelete'
+import BackofficeCourseModuleAddDialog from '@/components/core/backoffice/course/module/BackofficeCourseModuleAddDialog'
+import BackofficeCourseModuleEditDialog from '@/components/core/backoffice/course/module/BackofficeCourseModuleEditDialog'
 
 import {
   Loader2,
@@ -25,28 +29,12 @@ import {
   Trash2,
   Pencil,
   SquareArrowOutUpRight,
-  Check,
-  X,
+  FileSearch, // Icon untuk tombol Review
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import BaseTable from '@/components/_shared/BaseTable'
 import { Badge } from '@/components/ui/badge'
-import BackofficeCourseModuleAddDialog from '@/components/core/backoffice/course/module/BackofficeCourseModuleAddDialog'
-import BackofficeCourseModuleEditDialog from '@/components/core/backoffice/course/module/BackofficeCourseModuleEditDialog'
-import ConfirmDialogDelete from '@/components/core/backoffice/course/ConfirmDialogDelete'
-import { useDeleteModuleMutation } from '@/hooks/module.hook'
-import { se } from 'date-fns/locale'
-
-// --- API HELPER UNTUK MENTOR ---
-const updateMentorStatusAction = async ({ id, status }) => {
-  try {
-    const res = await request.patch(`/mentor/${id}`, { status })
-    return res.data
-  } catch (err) {
-    throw handleAxiosError(err)
-  }
-}
 
 // API Helper Delete Mentor
 const deleteMentorAction = async (id) => {
@@ -62,9 +50,21 @@ export default function CourseManagePageComponent({ id }) {
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  // State untuk Dialog Delete Mentor
+  // --- STATE ---
   const [deleteMentorId, setDeleteMentorId] = useState(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+
+  const [showDelete, setShowDelete] = useState({
+    status: false,
+    data: null,
+    mutation: null,
+  })
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showAddModule, setShowAddModule] = useState({ status: false })
+  const [showEditModule, setShowEditModule] = useState({
+    status: false,
+    data: null,
+  })
 
   // --- DATA FETCHING ---
   const { course, isLoading, refetch } = useGetCourseByIdAdmin({ courseId: id })
@@ -73,39 +73,10 @@ export default function CourseManagePageComponent({ id }) {
   const updateCourseMutation = useUpdateCourseAdminMutation({
     onSuccess: () => refetch(),
   })
+
   const { deleteModuleMutation } = useDeleteModuleMutation({
     successAction: () => {
       setShowDelete({ status: false, data: null, mutation: null })
-    },
-  })
-
-  const [showDelete, setShowDelete] = useState({
-    status: false,
-    data: null,
-    mutation: null,
-  })
-  const [isDeleting, setIsDeleting] = useState(false)
-
-  const [showAddModule, setShowAddModule] = useState({
-    status: false,
-  })
-  const [showEditModule, setShowEditModule] = useState({
-    status: false,
-    data: null,
-  })
-
-  // Mutation untuk Approve/Reject Mentor
-  const mentorStatusMutation = useMutation({
-    mutationFn: updateMentorStatusAction,
-    onSuccess: (_, variables) => {
-      toast.success(
-        `Mentor ${variables.status === 'ACCEPTED' ? 'accepted' : 'rejected'} successfully`
-      )
-      queryClient.invalidateQueries(['getCourseByIdAdmin', id])
-      refetch()
-    },
-    onError: (err) => {
-      toast.error(err.message || 'Failed to update mentor status')
     },
   })
 
@@ -116,7 +87,6 @@ export default function CourseManagePageComponent({ id }) {
       toast.success('Mentor removed successfully')
       queryClient.invalidateQueries(['getCourseByIdAdmin', id])
       refetch()
-      // Tutup dialog setelah sukses
       setIsDeleteDialogOpen(false)
       setDeleteMentorId(null)
     },
@@ -125,25 +95,24 @@ export default function CourseManagePageComponent({ id }) {
     },
   })
 
-  // Handler update status
-  const handleMentorAction = (mentorId, newStatus) => {
-    mentorStatusMutation.mutate({ id: mentorId, status: newStatus })
+  // --- HANDLERS ---
+  const handleReviewClick = (mentorId) => {
+    // Navigasi ke halaman detail mentor di dalam konteks course
+    router.push(`/backoffice/course/${id}/manage/mentor/${mentorId}`)
   }
 
-  // Handler Memicu Dialog Delete (Bukan langsung delete)
-  const handleTriggerDelete = (mentorId) => {
+  const handleTriggerDeleteMentor = (mentorId) => {
     setDeleteMentorId(mentorId)
     setIsDeleteDialogOpen(true)
   }
 
-  // Handler Eksekusi Delete (Dipanggil dari Dialog)
-  const handleConfirmDelete = () => {
+  const handleConfirmDeleteMentor = () => {
     if (deleteMentorId) {
       deleteMentorMutation.mutate(deleteMentorId)
     }
   }
 
-  // --- KOLOM TABEL RELASI ---
+  // --- KOLOM TABEL ---
   const moduleColumns = useMemo(
     () => [
       { key: 'title', header: 'Module Title', sortable: true },
@@ -222,40 +191,28 @@ export default function CourseManagePageComponent({ id }) {
         key: 'actions',
         header: 'Action',
         render: (row) => {
-          // Jika status ON_REVIEW, tampilkan tombol Accept & Decline
+          // Jika status ON_REVIEW, tampilkan tombol REVIEW yang mengarah ke halaman detail
           if (row.status === 'ON_REVIEW') {
             return (
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  className="h-8 bg-green-600 text-white hover:bg-green-700"
-                  onClick={() => handleMentorAction(row.id, 'ACCEPTED')}
-                  disabled={mentorStatusMutation.isPending}
-                  title="Accept Mentor"
-                >
-                  <Check className="mr-1 size-3" /> Accept
-                </Button>
-                <Button
-                  size="sm"
-                  className="h-8 bg-red-600 text-white hover:bg-red-700"
-                  onClick={() => handleMentorAction(row.id, 'REJECTED')}
-                  disabled={mentorStatusMutation.isPending}
-                  title="Decline Mentor"
-                >
-                  <X className="mr-1 size-3" /> Decline
-                </Button>
-              </div>
+              <Button
+                size="sm"
+                className="h-8 bg-[#0E1B50] text-white hover:bg-blue-900"
+                onClick={() => handleReviewClick(row.id)}
+                title="Review Application"
+              >
+                <FileSearch className="mr-2 size-3" /> Review
+              </Button>
             )
           }
 
-          // Tombol DELETE membuka Dialog
+          // Tombol DELETE untuk status lain (ACCEPTED/REJECTED)
           return (
             <Button
               size="icon"
               variant="ghost"
               className="h-8 w-8 text-gray-400 hover:text-red-600"
               title="Remove Mentor"
-              onClick={() => handleTriggerDelete(row.id)}
+              onClick={() => handleTriggerDeleteMentor(row.id)}
             >
               <Trash2 className="size-4" />
             </Button>
@@ -263,7 +220,7 @@ export default function CourseManagePageComponent({ id }) {
         },
       },
     ],
-    [mentorStatusMutation.isPending]
+    []
   )
 
   const quizColumns = useMemo(
@@ -348,7 +305,7 @@ export default function CourseManagePageComponent({ id }) {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 py-10">
-      {/* Header: Kembali ke Detail Page */}
+      {/* Header */}
       <div className="flex items-center gap-4 border-b pb-4">
         <Button
           variant="ghost"
@@ -388,7 +345,6 @@ export default function CourseManagePageComponent({ id }) {
           </TabsTrigger>
         </TabsList>
 
-        {/* Tab 1: General (Form Edit) */}
         <TabsContent value="general" className="mt-6">
           <CourseForm
             defaultValues={course}
@@ -399,7 +355,6 @@ export default function CourseManagePageComponent({ id }) {
           />
         </TabsContent>
 
-        {/* Tab 2: Modules */}
         <TabsContent value="modules" className="mt-6 space-y-4">
           <div className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm">
             <div>
@@ -411,11 +366,7 @@ export default function CourseManagePageComponent({ id }) {
             <Button
               size="sm"
               variant="primary"
-              onClick={() =>
-                setShowAddModule({
-                  status: !showAddModule.status,
-                })
-              }
+              onClick={() => setShowAddModule({ status: true })}
             >
               <Plus className="mr-2 size-4" /> Add Module
             </Button>
@@ -431,7 +382,6 @@ export default function CourseManagePageComponent({ id }) {
           </div>
         </TabsContent>
 
-        {/* Tab 3: Mentors */}
         <TabsContent value="mentors" className="mt-6 space-y-4">
           <div className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm">
             <div>
@@ -452,8 +402,8 @@ export default function CourseManagePageComponent({ id }) {
           </div>
         </TabsContent>
 
-        {/* Tab 4: Quizzes */}
         <TabsContent value="quizzes" className="mt-6 space-y-4">
+          {/* ... existing quiz content ... */}
           <div className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm">
             <div>
               <h3 className="text-lg font-semibold">Quizzes</h3>
@@ -474,8 +424,8 @@ export default function CourseManagePageComponent({ id }) {
           </div>
         </TabsContent>
 
-        {/* Tab 5: Schedules */}
         <TabsContent value="schedules" className="mt-6 space-y-4">
+          {/* ... existing schedule content ... */}
           <div className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm">
             <div>
               <h3 className="text-lg font-semibold">Live Schedules</h3>
@@ -497,29 +447,23 @@ export default function CourseManagePageComponent({ id }) {
         </TabsContent>
       </Tabs>
 
+      {/* DIALOGS */}
+
+      {/* 1. Module Add/Edit Dialogs */}
       <BackofficeCourseModuleAddDialog
         course={course}
         data={showAddModule}
-        onOpenChange={() => {
-          setShowAddModule({
-            status: !showAddModule.status,
-          })
-        }}
-        onSuccess={() => {}}
+        onOpenChange={() => setShowAddModule({ status: false })}
+        onSuccess={() => refetch()}
       />
-
       <BackofficeCourseModuleEditDialog
         course={course}
         data={showEditModule}
-        onOpenChange={() => {
-          setShowEditModule({
-            data: !showEditModule.status && row ? row : null,
-            status: !showEditModule.status,
-          })
-        }}
-        onSuccess={() => {}}
+        onOpenChange={() => setShowEditModule({ status: false, data: null })}
+        onSuccess={() => refetch()}
       />
 
+      {/* 2. Generic Delete Dialog (For Module) */}
       <ConfirmDialogDelete
         isOpen={showDelete.status}
         onClose={() => setShowDelete({ status: false, data: null })}
@@ -527,9 +471,22 @@ export default function CourseManagePageComponent({ id }) {
           setIsDeleting(true)
           await showDelete.mutation.mutate({ id: showDelete.data.id })
           setIsDeleting(false)
+          refetch()
         }}
         title="Delete Item"
-        isLoading={isDeleting || false}
+        isLoading={isDeleting}
+      />
+
+      {/* 3. Mentor Delete Dialog */}
+      <ConfirmDialogDelete
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleConfirmDeleteMentor}
+        title="Remove Mentor"
+        description="Are you sure you want to remove this mentor? This action cannot be undone."
+        isLoading={deleteMentorMutation.isPending}
+        confirmText="Remove"
+        variant="danger"
       />
     </div>
   )

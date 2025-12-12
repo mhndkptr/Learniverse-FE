@@ -121,17 +121,17 @@ export function useGetAllCourseAdmin({ params }) {
   }
 }
 
-// 2. GET BY ID ADMIN
+// 2. GET BY ID || ADMIN
 export function useGetCourseByIdAdmin({ courseId }) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ['getCourseByIdAdmin', courseId],
     queryFn: () => getCourseByIdAdminAction({ id: courseId }),
     enabled: !!courseId,
   })
-  return { course: data?.data ?? null, isLoading }
+  return { course: data?.data ?? null, isLoading, refetch } // <--- Return refetch
 }
 
-// 3. CREATE ADMIN (DIRECT AXIOS CALL)
+// 3. CREATE || ADMIN (DIRECT AXIOS CALL)
 export function useCreateCourseAdminMutation({ onSuccess } = {}) {
   const queryClient = useQueryClient()
 
@@ -161,7 +161,7 @@ export function useCreateCourseAdminMutation({ onSuccess } = {}) {
   })
 }
 
-// 4.  (DIRECT AXIOS CALL & SANITIZE)
+// 4. UPDATE || ADMIN (DIRECT AXIOS CALL & SANITIZE)
 export function useUpdateCourseAdminMutation({ onSuccess } = {}) {
   const queryClient = useQueryClient()
 
@@ -188,7 +188,6 @@ export function useUpdateCourseAdminMutation({ onSuccess } = {}) {
           }
         }
 
-        // Langsung panggil API Backend
         const res = await request.patch(`/course/${id}`, payload)
         return res.data
       } catch (error) {

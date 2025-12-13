@@ -127,5 +127,7 @@ export function handleAxiosError(error) {
   }
   errorResponse.success = false
 
+  console.log('API Error:', errorResponse)
+
   return errorResponse
 }

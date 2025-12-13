@@ -1,48 +1,53 @@
-export default function MentorExperience({ mentorId }) {
-  const experiences = [
-    { id: 1, title: 'Calculus', description: 'Lorem ipsum dolor sit amet...' },
-    { id: 2, title: 'Geometry', description: 'Lorem ipsum dolor sit amet...' },
-    {
-      id: 3,
-      title: 'Trigonometry',
-      description: 'Lorem ipsum dolor sit amet...',
-    },
-    { id: 4, title: 'Algebra', description: 'Lorem ipsum dolor sit amet...' },
-  ]
+// File: src #proyek frontend saya/components/core/mentor/MentorExperience.jsx
+import { Briefcase } from 'lucide-react'
+
+export default function MentorExperience({ experiences = [] }) {
+  // Jika data kosong/undefined, tampilkan placeholder
+  if (!experiences || experiences.length === 0) {
+    return (
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-lg font-semibold text-gray-900">
+          Professional Experience
+        </h2>
+        <div className="flex flex-col items-center justify-center py-6 text-gray-500">
+          <Briefcase className="mb-2 h-10 w-10 opacity-20" />
+          <p className="text-sm">No experience data provided.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="rounded-lg border border-gray-300 bg-white p-6">
-      <h2 className="text-foreground mb-6 text-2xl font-bold">
-        Experience for Mentor ID: {mentorId}
+    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+      <h2 className="mb-6 text-lg font-semibold text-gray-900">
+        Professional Experience
       </h2>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {experiences.map((experience) => (
+        {experiences.map((item, index) => (
           <div
-            key={experience.id}
-            className="flex gap-4 rounded-lg border border-gray-300 p-4"
+            key={item.id || index}
+            className="flex gap-4 rounded-lg border border-gray-100 bg-gray-50 p-4 transition-all hover:border-gray-300"
           >
-            {/* Thumbnail */}
-            <div className="flex-shrink-0">
-              <img
-                src="/calculus-math-green.jpg"
-                alt={experience.title}
-                className="h-20 w-20 rounded bg-black object-cover"
-              />
+            {/* Icon Placeholder */}
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border border-gray-100 bg-white shadow-sm">
+              <Briefcase className="h-6 w-6 text-amber-700" />
             </div>
 
-            <div className="flex-1">
-              <h3 className="text-foreground mb-2 font-bold">
-                {experience.title}
+            <div className="flex-1 overflow-hidden">
+              <h3 className="truncate font-bold text-gray-900">
+                {item.title || 'Untitled Position'}
               </h3>
 
-              <p className="mb-3 line-clamp-2 text-sm text-gray-600">
-                {experience.description}
-              </p>
+              {item.company && (
+                <p className="text-xs font-medium tracking-wide text-gray-500 uppercase">
+                  {item.company}
+                </p>
+              )}
 
-              <button className="inline-flex items-center gap-2 rounded bg-amber-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-800">
-                See Detail
-              </button>
+              <p className="mt-2 line-clamp-2 text-sm text-gray-600">
+                {item.description || 'No description provided.'}
+              </p>
             </div>
           </div>
         ))}

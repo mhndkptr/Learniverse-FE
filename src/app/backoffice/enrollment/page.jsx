@@ -39,10 +39,7 @@ export default function BackofficeEnrollmentPage() {
   const [filterStatus, setFilterStatus] = useState(initialStatus)
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
-  const [sortConfig, setSortConfig] = useState({
-    key: 'created_at',
-    direction: 'desc',
-  })
+  const [sortOption, setSortOption] = useState('created_desc')
 
   // --- BREADCRUMB ---
   useEffect(() => {
@@ -61,7 +58,7 @@ export default function BackofficeEnrollmentPage() {
       filter: filterStatus !== 'all' ? { status: filterStatus } : undefined,
       // PENTING: Minta backend untuk menyertakan data User dan Course
       include_relation: ['user', 'course'],
-      order_by: [{ field: sortConfig.key, direction: sortConfig.direction }],
+      order_by: [{ field: 'created_at', direction: 'desc' }],
     },
   })
 
@@ -191,22 +188,68 @@ export default function BackofficeEnrollmentPage() {
       {
         key: 'status',
         header: 'Status',
-        sortable: true,
-        render: (row) => getStatusBadge(row.status),
+        sortable: false,
+        render: (row) =>
+          getStatusBadge(
+            row.course_transaction?.status || row.status || 'unverified'
+          ),
       },
       {
         key: 'amount',
         header: 'Price',
-        sortable: true,
+        sortable: false,
         render: (row) => (
           <span className="font-medium text-gray-900">
-            {formatCurrency(Number(row.amount) || 0)}
+            {formatCurrency(
+              Number(
+                row.course_transaction?.amount ??
+                  row.amount ??
+                  row.course?.price ??
+                  0
+              ) || 0
+            )}
           </span>
         ),
       },
     ],
     []
   )
+
+  const sortedEnrollments = useMemo(() => {
+    const data = [...(enrollments || [])]
+    const getStatusValue = (row) =>
+      (row.course_transaction?.status || row.status || 'unverified')?.toString()
+    const getNameValue = (row) => row.user?.name || ''
+    const getCreatedValue = (row) => row.created_at || row.joined_at || ''
+
+    switch (sortOption) {
+      case 'name_asc':
+        return data.sort((a, b) => getNameValue(a).localeCompare(getNameValue(b)))
+      case 'name_desc':
+        return data.sort((a, b) => getNameValue(b).localeCompare(getNameValue(a)))
+      case 'status_asc':
+        return data.sort((a, b) =>
+          getStatusValue(a).localeCompare(getStatusValue(b))
+        )
+      case 'status_desc':
+        return data.sort((a, b) =>
+          getStatusValue(b).localeCompare(getStatusValue(a))
+        )
+      case 'created_asc':
+        return data.sort(
+          (a, b) =>
+            new Date(getCreatedValue(a)).getTime() -
+            new Date(getCreatedValue(b)).getTime()
+        )
+      case 'created_desc':
+      default:
+        return data.sort(
+          (a, b) =>
+            new Date(getCreatedValue(b)).getTime() -
+            new Date(getCreatedValue(a)).getTime()
+        )
+    }
+  }, [enrollments, sortOption])
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
@@ -260,17 +303,37 @@ export default function BackofficeEnrollmentPage() {
             </SelectContent>
           </Select>
         </div>
+
+        <div className="flex w-full items-center gap-2 md:w-auto">
+          <Select
+            value={sortOption}
+            onValueChange={(val) => {
+              setSortOption(val)
+              setCurrentPage(1)
+            }}
+          >
+            <SelectTrigger className="w-full bg-white md:w-[220px]">
+              <SelectValue placeholder="Sort By" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="created_desc">Added Time (Newest)</SelectItem>
+              <SelectItem value="created_asc">Added Time (Oldest)</SelectItem>
+              <SelectItem value="name_asc">Name (A-Z)</SelectItem>
+              <SelectItem value="name_desc">Name (Z-A)</SelectItem>
+              <SelectItem value="status_asc">Status (A-Z)</SelectItem>
+              <SelectItem value="status_desc">Status (Z-A)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Table */}
       <div className="overflow-hidden rounded-md border bg-white shadow-sm">
         <BaseTable
-          data={enrollments || []}
+          data={sortedEnrollments || []}
           columns={columns}
           isLoading={isLoading}
-          serverSide={true}
-          sortConfig={sortConfig}
-          onSortChange={setSortConfig}
+          serverSide={false}
           onRowAction={() => {}}
         />
         <div className="border-t p-4">

@@ -15,7 +15,6 @@ import {
   BookOpen,
 } from 'lucide-react'
 
-// Components
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -24,12 +23,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 
-// Hooks & Utils
 import {
   useGetMentorById,
   useUpdateMentorStatusMutation,
 } from '@/hooks/mentor.hook'
-import { getAllMentorAdminAction } from '@/actions/mentor.action' // Import action untuk fetch list mentor
+import { getAllMentorAdminAction } from '@/actions/mentor.action'
 import { getTwoInitials } from '@/utils/helper'
 
 export default function MentorDetailAprovalPageComponent({
@@ -38,31 +36,29 @@ export default function MentorDetailAprovalPageComponent({
 }) {
   const router = useRouter()
 
-  // 1. Fetch Data Mentor (Aplikasi saat ini)
+  // 1. Fetch Data Mentor
   const { mentor, isLoading, refetch } = useGetMentorById({ id: mentorId })
 
-  // 2. Fetch Data Accepted Mentorships (History User) [FIXED]
-  // Mengambil data course lain dimana user ini statusnya sudah ACCEPTED
+  // 2. Fetch Data Accepted Mentorships (History User)
   const { data: userHistoryData } = useQuery({
     queryKey: ['mentor-user-history', mentor?.user?.id],
     queryFn: () =>
       getAllMentorAdminAction({
         params: {
           filter: {
-            user_id: mentor?.user?.id, // Filter berdasarkan User ID pelamar
-            status: 'ACCEPTED', // Hanya ambil yang statusnya ACCEPTED
+            user_id: mentor?.user?.id,
+            status: 'ACCEPTED',
           },
-          include_relation: ['course'], // Sertakan data course
+          include_relation: ['course'],
           pagination: {
             page: 1,
             limit: 100,
           },
         },
       }),
-    enabled: !!mentor?.user?.id, // Hanya jalankan jika data user sudah ada
+    enabled: !!mentor?.user?.id,
   })
 
-  // Ambil list dari response
   const acceptedMentorships = userHistoryData?.data || []
 
   // 3. Mutation untuk Update Status
@@ -73,7 +69,6 @@ export default function MentorDetailAprovalPageComponent({
       { id: mentorId, status },
       {
         onSuccess: () => {
-          // [FIXED] Redirect ke halaman Manage Course setelah sukses
           router.push(`/backoffice/course/${courseId}/manage`)
         },
       }
@@ -166,7 +161,7 @@ export default function MentorDetailAprovalPageComponent({
               </div>
             </CardHeader>
             <CardContent className="space-y-6 pt-6">
-              {/* LIST ACCEPTED COURSES [FIXED] */}
+              {/* LIST ACCEPTED COURSES  */}
               <div>
                 <p className="mb-3 text-xs font-semibold text-gray-500 uppercase">
                   Enrolled In (Accepted)

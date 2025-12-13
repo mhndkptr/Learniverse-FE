@@ -59,11 +59,11 @@ export default function BackofficeCourseModuleAddDialog({
     },
   })
 
-  const handleAddSubmit = (data) => {
-    const dataKey = Object.keys(data)
+  const handleAddSubmit = (formData) => {
+    const dataKey = Object.keys(formData)
     const payload = new FormData()
     dataKey.map((key) => {
-      payload.append(key, data[key])
+      payload.append(key, formData[key])
     })
     payload.append('course_id', course.id)
     if (file) {
@@ -182,29 +182,6 @@ export default function BackofficeCourseModuleAddDialog({
             </FormControl>
             <p className="text-[0.8rem] text-slate-500">*Max file size 5 MB.</p>
           </FormItem>
-
-          <FormField
-            control={addFormConfig.control}
-            name="file_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium text-black">
-                  File Name
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    type="text"
-                    placeholder="Enter module file name"
-                    {...field}
-                    disabled={true}
-                    className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 focus:outline-none"
-                    required
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
           <div className="flex w-full justify-end gap-3 md:mt-2">
             <Button

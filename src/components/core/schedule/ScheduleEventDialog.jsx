@@ -13,9 +13,9 @@ import { Button } from '@/components/ui/button'
 export default function ScheduleEventDialog({
   open,
   onOpenChange,
-  date, // string "YYYY-MM-DD"
-  events = [], // array of { id, startTime, endTime, title, course }
-  onEdit, // (event) => void
+  date, //  "YYYY-MM-DD"
+  events = [],
+  onEdit,
 }) {
   const formattedDate = date
     ? new Date(date).toLocaleDateString('en-US', {

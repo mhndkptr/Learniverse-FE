@@ -5,17 +5,25 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import request, { handleAxiosError } from '@/utils/baseRequest'
+import { getObjValueByPath } from '@/utils/helper'
 import {
   useGetCourseByIdAdmin,
   useUpdateCourseAdminMutation,
+  useDeleteCourseAdminMutation,
 } from '@/hooks/course.hook'
 import { useDeleteModuleMutation } from '@/hooks/module.hook'
+import { useDeleteQuizMutation } from '@/hooks/quiz.hook'
+import {
+  useCreateScheduleMutation,
+  useUpdateScheduleMutation,
+  useDeleteScheduleMutation,
+} from '@/hooks/schedule.hook'
 
-// Components
 import CourseForm from '@/components/core/backoffice/course/CourseForm'
 import ConfirmDialogDelete from '@/components/core/backoffice/course/ConfirmDialogDelete'
 import BackofficeCourseModuleAddDialog from '@/components/core/backoffice/course/module/BackofficeCourseModuleAddDialog'
 import BackofficeCourseModuleEditDialog from '@/components/core/backoffice/course/module/BackofficeCourseModuleEditDialog'
+import AddScheduleDialog from '@/components/core/schedule/AddScheduleDialog'
 
 import {
   Loader2,
@@ -29,14 +37,14 @@ import {
   Trash2,
   Pencil,
   SquareArrowOutUpRight,
-  FileSearch, // Icon untuk tombol Review
+  FileSearch,
+  CircleMinus,
+  ArrowUpDown,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import BaseTable from '@/components/_shared/BaseTable'
 import { Badge } from '@/components/ui/badge'
-import { se } from 'date-fns/locale'
-import { useDeleteQuizMutation } from '@/hooks/quiz.hook'
 
 // API Helper Delete Mentor
 const deleteMentorAction = async (id) => {
@@ -48,27 +56,160 @@ const deleteMentorAction = async (id) => {
   }
 }
 
+// --- HELPER FUNCTIONS ---
+const formatDateToLocalInput = (dateObj) => {
+  const year = dateObj.getFullYear()
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0')
+  const day = String(dateObj.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const formatTimeToLocalInput = (dateObj) => {
+  const hours = String(dateObj.getHours()).padStart(2, '0')
+  const minutes = String(dateObj.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
+}
+
+// Helper Sort Data Manual
+const sortData = (data, sortConfig) => {
+  if (!data) return []
+  if (!sortConfig.key) return data
+
+  const sorted = [...data].sort((a, b) => {
+    const valA = getObjValueByPath(a, sortConfig.key)
+    const valB = getObjValueByPath(b, sortConfig.key)
+
+    if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1
+    if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1
+    return 0
+  })
+  return sorted
+}
+
+const SortDropdown = ({ sortConfig, onSortChange, options }) => {
+  return (
+    <div className="relative">
+      <select
+        className="border-input focus:ring-ring h-10 cursor-pointer appearance-none rounded-md border bg-white pr-8 pl-3 text-sm focus:ring-1 focus:outline-none"
+        onChange={(e) => {
+          const [key, direction] = e.target.value.split(':')
+          onSortChange({ key, direction })
+        }}
+        value={`${sortConfig.key}:${sortConfig.direction}`}
+      >
+        <option value=":none" disabled>
+          Sort By
+        </option>
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      <ArrowUpDown
+        size={14}
+        className="pointer-events-none absolute top-3 right-2 text-gray-400"
+      />
+    </div>
+  )
+}
+
 export default function CourseManagePageComponent({ id }) {
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  // --- STATE ---
+  // --- STATE UMUM ---
   const [deleteMentorId, setDeleteMentorId] = useState(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isDeleteCourseDialogOpen, setIsDeleteCourseDialogOpen] =
+    useState(false)
+
+  // --- STATE SORTING ---
+  const [moduleSort, setModuleSort] = useState({
+    key: 'created_at',
+    direction: 'desc',
+  })
+  const [mentorSort, setMentorSort] = useState({
+    key: 'created_at',
+    direction: 'desc',
+  })
+  const [quizSort, setQuizSort] = useState({
+    key: 'created_at',
+    direction: 'desc',
+  })
+  const [scheduleSort, setScheduleSort] = useState({
+    key: 'created_at',
+    direction: 'desc',
+  })
+
+  // --- STATE SCHEDULE ---
+  const [showAddSchedule, setShowAddSchedule] = useState(false)
+  const [editingSchedule, setEditingSchedule] = useState(null)
+  const [deleteScheduleId, setDeleteScheduleId] = useState(null)
+
+  // --- DATA FETCHING ---
   const { course, isLoading, refetch } = useGetCourseByIdAdmin({ courseId: id })
+
+  // --- PROCESSED DATA (SORTED) ---
+  const processedModules = useMemo(
+    () => sortData(course?.moduls || [], moduleSort),
+    [course?.moduls, moduleSort]
+  )
+  const processedMentors = useMemo(
+    () => sortData(course?.mentors || [], mentorSort),
+    [course?.mentors, mentorSort]
+  )
+  const processedQuizzes = useMemo(
+    () => sortData(course?.quizzes || [], quizSort),
+    [course?.quizzes, quizSort]
+  )
+  const processedSchedules = useMemo(
+    () => sortData(course?.schedules || [], scheduleSort),
+    [course?.schedules, scheduleSort]
+  )
+
+  // --- MUTATIONS ---
   const updateCourseMutation = useUpdateCourseAdminMutation({
     onSuccess: () => refetch(),
   })
+
+  const { mutate: deleteCourse, isPending: isDeletingCourse } =
+    useDeleteCourseAdminMutation({
+      onSuccess: () => {
+        router.push('/backoffice/course')
+      },
+    })
+
   const { deleteModuleMutation } = useDeleteModuleMutation({
     successAction: () => {
       setShowDelete({ status: false, data: null, mutation: null })
+      refetch()
     },
   })
+
   const { deleteQuizMutation } = useDeleteQuizMutation({
     successAction: () => {
       setShowDelete({ status: false, data: null, mutation: null })
+      refetch()
     },
   })
+
+  const { mutation: createScheduleMutation } = useCreateScheduleMutation({
+    successAction: () => {
+      setShowAddSchedule(false)
+      refetch()
+    },
+  })
+
+  const { mutation: updateScheduleMutation } = useUpdateScheduleMutation({
+    successAction: () => {
+      setShowAddSchedule(false)
+      setEditingSchedule(null)
+      refetch()
+    },
+  })
+
+  const { mutation: deleteScheduleMutation } = useDeleteScheduleMutation()
 
   const [showDelete, setShowDelete] = useState({
     status: false,
@@ -82,7 +223,7 @@ export default function CourseManagePageComponent({ id }) {
     data: null,
   })
 
-  // Mutation untuk Delete Mentor
+  // Mutation Delete Mentor
   const deleteMentorMutation = useMutation({
     mutationFn: deleteMentorAction,
     onSuccess: () => {
@@ -99,7 +240,6 @@ export default function CourseManagePageComponent({ id }) {
 
   // --- HANDLERS ---
   const handleReviewClick = (mentorId) => {
-    // Navigasi ke halaman detail mentor di dalam konteks course
     router.push(`/backoffice/course/${id}/manage/mentor/${mentorId}`)
   }
 
@@ -114,10 +254,67 @@ export default function CourseManagePageComponent({ id }) {
     }
   }
 
-  // --- KOLOM TABEL ---
+  const handleTriggerDeleteCourse = () => {
+    setIsDeleteCourseDialogOpen(true)
+  }
+
+  const handleConfirmDeleteCourse = () => {
+    deleteCourse(id)
+  }
+
+  const handleSaveSchedule = (data) => {
+    const startDateObj = new Date(`${data.date}T${data.startTime}`)
+    const endDateObj = new Date(`${data.date}T${data.endTime}`)
+
+    const payload = {
+      title: data.title,
+      description: '',
+      course_id: data.courseId,
+      start_time: startDateObj.toISOString(),
+      end_time: endDateObj.toISOString(),
+    }
+
+    if (data.id) {
+      updateScheduleMutation.mutate({ id: data.id, payload })
+    } else {
+      createScheduleMutation.mutate(payload)
+    }
+  }
+
+  const handleEditSchedule = (row) => {
+    const startDateObj = new Date(row.start_time)
+    const endDateObj = new Date(row.end_time)
+
+    const dateStr = formatDateToLocalInput(startDateObj)
+    const startTimeStr = formatTimeToLocalInput(startDateObj)
+    const endTimeStr = formatTimeToLocalInput(endDateObj)
+
+    setEditingSchedule({
+      id: row.id,
+      title: row.title,
+      courseId: row.course_id,
+      date: dateStr,
+      startTime: startTimeStr,
+      endTime: endTimeStr,
+    })
+    setShowAddSchedule(true)
+  }
+
+  const handleDeleteSchedule = async () => {
+    if (deleteScheduleId) {
+      setIsDeleting(true)
+      await deleteScheduleMutation.mutateAsync({ id: deleteScheduleId })
+      refetch()
+      setIsDeleting(false)
+      setDeleteScheduleId(null)
+      toast.success('Schedule deleted')
+    }
+  }
+
+  // --- KOLOM TABEL  ---
   const moduleColumns = useMemo(
     () => [
-      { key: 'title', header: 'Module Title', sortable: true },
+      { key: 'title', header: 'Module Title' },
       { key: 'file_name', header: 'File Name' },
       {
         key: 'actions',
@@ -127,9 +324,7 @@ export default function CourseManagePageComponent({ id }) {
             <Button
               size="icon"
               variant="ghost"
-              onClick={() => {
-                window.open(row.modul_uri, '_blank')
-              }}
+              onClick={() => window.open(row.modul_uri, '_blank')}
               className="h-8 w-8 text-blue-600"
             >
               <SquareArrowOutUpRight className="size-4" />
@@ -170,7 +365,7 @@ export default function CourseManagePageComponent({ id }) {
 
   const mentorColumns = useMemo(
     () => [
-      { key: 'user.name', header: 'Mentor Name', sortable: true },
+      { key: 'user.name', header: 'Mentor Name' },
       { key: 'user.email', header: 'Email' },
       {
         key: 'status',
@@ -195,7 +390,6 @@ export default function CourseManagePageComponent({ id }) {
         key: 'actions',
         header: 'Action',
         render: (row) => {
-          // Jika status ON_REVIEW, tampilkan tombol REVIEW yang mengarah ke halaman detail
           if (row.status === 'ON_REVIEW') {
             return (
               <Button
@@ -208,17 +402,15 @@ export default function CourseManagePageComponent({ id }) {
               </Button>
             )
           }
-
-          // Tombol DELETE untuk status lain (ACCEPTED/REJECTED)
           return (
             <Button
               size="icon"
               variant="ghost"
-              className="h-8 w-8 text-gray-400 hover:text-red-600"
-              title="Remove Mentor"
+              className="h-8 w-8 text-gray-400 hover:bg-red-50 hover:text-red-600"
+              title="Unenroll this mentor"
               onClick={() => handleTriggerDeleteMentor(row.id)}
             >
-              <Trash2 className="size-4" />
+              <CircleMinus className="size-5" />
             </Button>
           )
         },
@@ -229,16 +421,26 @@ export default function CourseManagePageComponent({ id }) {
 
   const quizColumns = useMemo(
     () => [
-      { key: 'title', header: 'Quiz Title' },
+      {
+        key: 'title',
+        header: 'Quiz Title',
+        className: 'w-[50%] min-w-[300px]',
+      },
       {
         key: 'status',
         header: 'Status',
+        className: 'w-[100px]',
         render: (row) => <Badge variant="outline">{row.status}</Badge>,
       },
-      { key: 'duration', header: 'Duration (m)' },
+      {
+        key: 'duration',
+        header: 'Duration (m)',
+        className: 'w-[150px] whitespace-nowrap',
+      },
       {
         key: 'actions',
         header: 'Action',
+        className: 'w-[100px]',
         render: (row) => (
           <div className="flex gap-2">
             <Button
@@ -278,9 +480,32 @@ export default function CourseManagePageComponent({ id }) {
     () => [
       { key: 'title', header: 'Topic' },
       {
+        key: 'date',
+        header: 'Date',
+        render: (row) =>
+          new Date(row.start_time).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          }),
+      },
+      {
         key: 'start_time',
-        header: 'Start',
-        render: (row) => new Date(row.start_time).toLocaleString(),
+        header: 'Start Time',
+        render: (row) =>
+          new Date(row.start_time).toLocaleTimeString('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+      },
+      {
+        key: 'end_time',
+        header: 'End Time',
+        render: (row) =>
+          new Date(row.end_time).toLocaleTimeString('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
       },
       {
         key: 'actions',
@@ -291,6 +516,7 @@ export default function CourseManagePageComponent({ id }) {
               size="icon"
               variant="ghost"
               className="h-8 w-8 text-amber-600"
+              onClick={() => handleEditSchedule(row)}
             >
               <Pencil className="size-4" />
             </Button>
@@ -298,6 +524,7 @@ export default function CourseManagePageComponent({ id }) {
               size="icon"
               variant="ghost"
               className="h-8 w-8 text-red-600"
+              onClick={() => setDeleteScheduleId(row.id)}
             >
               <Trash2 className="size-4" />
             </Button>
@@ -368,6 +595,7 @@ export default function CourseManagePageComponent({ id }) {
               updateCourseMutation.mutate({ id, body: values })
             }
             isLoading={updateCourseMutation.isPending}
+            onDelete={handleTriggerDeleteCourse}
           />
         </TabsContent>
 
@@ -379,21 +607,35 @@ export default function CourseManagePageComponent({ id }) {
                 Manage learning materials.
               </p>
             </div>
-            <Button
-              size="sm"
-              variant="primary"
-              onClick={() => setShowAddModule({ status: true })}
-            >
-              <Plus className="mr-2 size-4" /> Add Module
-            </Button>
+            <div className="flex items-center gap-3">
+              <SortDropdown
+                sortConfig={moduleSort}
+                onSortChange={setModuleSort}
+                options={[
+                  { value: 'title:asc', label: 'Title (A-Z)' },
+                  { value: 'title:desc', label: 'Title (Z-A)' },
+                  { value: 'created_at:desc', label: 'Newest' },
+                  { value: 'created_at:asc', label: 'Oldest' },
+                ]}
+              />
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={() => setShowAddModule({ status: true })}
+              >
+                <Plus className="mr-2 size-4" /> Add Module
+              </Button>
+            </div>
           </div>
           <div className="rounded-lg border bg-white shadow-sm">
             <BaseTable
-              data={course.moduls || []}
+              data={processedModules}
               columns={moduleColumns}
-              serverSide={false}
+              serverSide={true}
               searchFields={['title']}
               onRowAction={() => {}}
+              sortConfig={moduleSort}
+              onSortChange={setModuleSort}
             />
           </div>
         </TabsContent>
@@ -406,72 +648,120 @@ export default function CourseManagePageComponent({ id }) {
                 Manage mentor applications and approvals.
               </p>
             </div>
+            <SortDropdown
+              sortConfig={mentorSort}
+              onSortChange={setMentorSort}
+              options={[
+                { value: 'user.name:asc', label: 'Name (A-Z)' },
+                { value: 'user.name:desc', label: 'Name (Z-A)' },
+                { value: 'status:asc', label: 'Status' },
+                { value: 'created_at:desc', label: 'Newest' },
+                { value: 'created_at:asc', label: 'Oldest' },
+              ]}
+            />
           </div>
           <div className="rounded-lg border bg-white shadow-sm">
             <BaseTable
-              data={course.mentors || []}
+              data={processedMentors}
               columns={mentorColumns}
-              serverSide={false}
+              serverSide={true}
               searchFields={['user.name', 'user.email']}
               onRowAction={() => {}}
+              sortConfig={mentorSort}
+              onSortChange={setMentorSort}
             />
           </div>
         </TabsContent>
 
         <TabsContent value="quizzes" className="mt-6 space-y-4">
-          {/* ... existing quiz content ... */}
           <div className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm">
             <div>
               <h3 className="text-lg font-semibold">Quizzes</h3>
               <p className="text-sm text-gray-500">Manage quizzes.</p>
             </div>
-            <Button
-              size="sm"
-              variant="primary"
-              onClick={() => {
-                router.push(`/backoffice/course/${id}/manage/quiz/create`)
-              }}
-            >
-              <Plus className="mr-2 size-4" /> Create Quiz
-            </Button>
+            <div className="flex items-center gap-3">
+              <SortDropdown
+                sortConfig={quizSort}
+                onSortChange={setQuizSort}
+                options={[
+                  { value: 'title:asc', label: 'Title (A-Z)' },
+                  { value: 'title:desc', label: 'Title (Z-A)' },
+                  { value: 'status:asc', label: 'Status' },
+                  { value: 'duration:asc', label: 'Duration' },
+                  { value: 'created_at:desc', label: 'Newest' },
+                  { value: 'created_at:asc', label: 'Oldest' },
+                ]}
+              />
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={() => {
+                  router.push(`/backoffice/course/${id}/manage/quiz/create`)
+                }}
+              >
+                <Plus className="mr-2 size-4" /> Create Quiz
+              </Button>
+            </div>
           </div>
           <div className="rounded-lg border bg-white shadow-sm">
             <BaseTable
-              data={course.quizzes || []}
+              data={processedQuizzes}
               columns={quizColumns}
-              serverSide={false}
+              serverSide={true}
               searchFields={['title']}
               onRowAction={() => {}}
+              sortConfig={quizSort}
+              onSortChange={setQuizSort}
             />
           </div>
         </TabsContent>
 
         <TabsContent value="schedules" className="mt-6 space-y-4">
-          {/* ... existing schedule content ... */}
           <div className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm">
             <div>
               <h3 className="text-lg font-semibold">Live Schedules</h3>
               <p className="text-sm text-gray-500">Manage live sessions.</p>
             </div>
-            <Button size="sm" variant="primary">
-              <Plus className="mr-2 size-4" /> Add Schedule
-            </Button>
+            <div className="flex items-center gap-3">
+              <SortDropdown
+                sortConfig={scheduleSort}
+                onSortChange={setScheduleSort}
+                options={[
+                  { value: 'start_time:asc', label: 'Earliest' },
+                  { value: 'start_time:desc', label: 'Latest' },
+                  { value: 'title:asc', label: 'Topic (A-Z)' },
+                  { value: 'created_at:desc', label: 'Newest Created' },
+                  { value: 'created_at:asc', label: 'Oldest Created' },
+                ]}
+              />
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={() => {
+                  setEditingSchedule(null)
+                  setShowAddSchedule(true)
+                }}
+              >
+                <Plus className="mr-2 size-4" /> Add Schedule
+              </Button>
+            </div>
           </div>
           <div className="rounded-lg border bg-white shadow-sm">
             <BaseTable
-              data={course.schedules || []}
+              data={processedSchedules}
               columns={scheduleColumns}
-              serverSide={false}
+              serverSide={true}
               searchFields={['title']}
               onRowAction={() => {}}
+              sortConfig={scheduleSort}
+              onSortChange={setScheduleSort}
             />
           </div>
         </TabsContent>
       </Tabs>
 
-      {/* DIALOGS */}
+      {/* --- DIALOGS --- */}
 
-      {/* 1. Module Add/Edit Dialogs */}
       <BackofficeCourseModuleAddDialog
         course={course}
         data={showAddModule}
@@ -494,7 +784,15 @@ export default function CourseManagePageComponent({ id }) {
         onSuccess={() => {}}
       />
 
-      {/* 2. Generic Delete Dialog (For Module) */}
+      <AddScheduleDialog
+        open={showAddSchedule}
+        onOpenChange={setShowAddSchedule}
+        initialData={editingSchedule}
+        onSave={handleSaveSchedule}
+        userCourses={[{ id: course.id, title: course.title }]}
+      />
+
+      {/* 2. Generic Delete Dialog (For Module/Quiz) */}
       <ConfirmDialogDelete
         isOpen={showDelete.status}
         onClose={() =>
@@ -519,6 +817,30 @@ export default function CourseManagePageComponent({ id }) {
         description="Are you sure you want to remove this mentor? This action cannot be undone."
         isLoading={deleteMentorMutation.isPending}
         confirmText="Remove"
+        variant="danger"
+      />
+
+      {/* 4. Course Delete Dialog */}
+      <ConfirmDialogDelete
+        isOpen={isDeleteCourseDialogOpen}
+        onClose={() => setIsDeleteCourseDialogOpen(false)}
+        onConfirm={handleConfirmDeleteCourse}
+        title="Delete Entire Course"
+        description="Are you sure you want to delete this course permanently? All modules, quizzes, and enrollments will be affected."
+        isLoading={isDeletingCourse}
+        confirmText="Delete Course"
+        variant="danger"
+      />
+
+      {/* 5. Schedule Delete Dialog */}
+      <ConfirmDialogDelete
+        isOpen={!!deleteScheduleId}
+        onClose={() => setDeleteScheduleId(null)}
+        onConfirm={handleDeleteSchedule}
+        title="Delete Schedule"
+        description="Are you sure you want to delete this schedule? This action cannot be undone."
+        isLoading={isDeleting}
+        confirmText="Delete Schedule"
         variant="danger"
       />
     </div>

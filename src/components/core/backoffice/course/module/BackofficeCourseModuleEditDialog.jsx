@@ -22,7 +22,6 @@ export default function BackofficeCourseModuleEditDialog({
   onOpenChange,
   onSuccess,
 }) {
-  const [module, setModule] = useState(data?.data || null)
   const { editModuleMutation } = useEditModuleMutation({
     successAction: () => {
       onSuccess()
@@ -31,7 +30,9 @@ export default function BackofficeCourseModuleEditDialog({
       removeFile()
     },
   })
+
   const [file, setFile] = useState(null)
+  const [moduleId, setModuleId] = useState(null)
 
   const editFormSchema = z.object({
     title: z
@@ -48,7 +49,7 @@ export default function BackofficeCourseModuleEditDialog({
           'Description must provide more detail (at least 10 characters)',
       }),
 
-    file_name: z.string(),
+    file_name: z.string().optional(),
   })
 
   const editFormConfig = useForm({
@@ -60,18 +61,34 @@ export default function BackofficeCourseModuleEditDialog({
     },
   })
 
-  const handleEditSubmit = (data) => {
-    const dataKey = Object.keys(data)
+  useEffect(() => {
+    if (data.status && data.data) {
+      setModuleId(data.data.id)
+
+      editFormConfig.setValue('title', data.data.title)
+      editFormConfig.setValue('description', data.data.description)
+      editFormConfig.setValue('file_name', data.data.file_name)
+    }
+  }, [data.status, data.data, editFormConfig])
+
+  const handleEditSubmit = (formData) => {
+    if (!moduleId) {
+      toast.error('Module ID is missing.')
+      return
+    }
+
+    const dataKey = Object.keys(formData)
     const payload = new FormData()
     dataKey.map((key) => {
-      payload.append(key, data[key])
+      payload.append(key, formData[key])
     })
     payload.append('course_id', course.id)
     if (file) {
       payload.append('file_module', file)
     }
+
     editModuleMutation.mutate({
-      id: module?.id,
+      id: moduleId,
       payload: payload,
     })
   }
@@ -98,21 +115,11 @@ export default function BackofficeCourseModuleEditDialog({
       }
 
       setFile(selectedFile)
-
       editFormConfig.setValue('file_name', selectedFile.name, {
         shouldValidate: true,
       })
     }
   }
-
-  useEffect(() => {
-    if (data?.data) {
-      setModule(data.data)
-      editFormConfig.setValue('title', data.data.title)
-      editFormConfig.setValue('description', data.data.description)
-      editFormConfig.setValue('file_name', data.data.file_name)
-    }
-  }, [data])
 
   return (
     <>
@@ -177,7 +184,7 @@ export default function BackofficeCourseModuleEditDialog({
 
           <FormItem>
             <FormLabel className="text-sm font-medium text-black">
-              Upload Document (PDF)
+              Replace Document (PDF) - Optional
             </FormLabel>
             <FormControl>
               <Input
@@ -188,42 +195,10 @@ export default function BackofficeCourseModuleEditDialog({
                 className="h-max w-full cursor-pointer rounded-lg border border-slate-300 px-4 py-3 text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-0 file:text-sm file:font-semibold file:text-black hover:file:bg-slate-200 focus:border-slate-400 focus:outline-none"
               />
             </FormControl>
-            <p className="text-[0.8rem] text-slate-500">*Max file size 5 MB.</p>
             <p className="text-[0.8rem] text-slate-500">
-              Current File:{' '}
-              <a
-                href={module?.modul_uri}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-black underline"
-              >
-                {module?.file_name}
-              </a>
+              *Leave empty to keep current file. Max size 5 MB.
             </p>
           </FormItem>
-
-          <FormField
-            control={editFormConfig.control}
-            name="file_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium text-black">
-                  File Name
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    type="text"
-                    placeholder="Enter module file name"
-                    {...field}
-                    disabled={true}
-                    className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 focus:outline-none"
-                    required
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
           <div className="flex w-full justify-end gap-3 md:mt-2">
             <Button
@@ -239,7 +214,7 @@ export default function BackofficeCourseModuleEditDialog({
               type="submit"
               disabled={editModuleMutation.isPending}
             >
-              {editModuleMutation.isPending ? 'Loading...' : 'Save'}
+              {editModuleMutation.isPending ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </BaseForm>

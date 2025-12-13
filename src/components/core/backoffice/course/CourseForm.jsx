@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/form'
 import BaseForm from '@/components/_shared/BaseForm'
 
-// Schema Validasi (Backend)
 const courseSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(150),
   code: z
@@ -32,7 +31,12 @@ const courseSchema = z.object({
   cover: z.any().optional(),
 })
 
-export default function CourseForm({ defaultValues, onSubmit, isLoading }) {
+export default function CourseForm({
+  defaultValues,
+  onSubmit,
+  isLoading,
+  onDelete,
+}) {
   const [preview, setPreview] = useState(null)
 
   const form = useForm({
@@ -49,7 +53,6 @@ export default function CourseForm({ defaultValues, onSubmit, isLoading }) {
     },
   })
 
-  // Load data edit
   useEffect(() => {
     if (defaultValues) {
       form.reset({
@@ -83,7 +86,7 @@ export default function CourseForm({ defaultValues, onSubmit, isLoading }) {
       onSubmit={onSubmit}
       className="grid grid-cols-1 gap-6 rounded-lg border bg-white p-6 shadow-sm md:grid-cols-12"
     >
-      {/* KIRI */}
+      {/* ================= LEFT ================= */}
       <div className="space-y-4 md:col-span-8">
         <div className="grid grid-cols-2 gap-4">
           <FormField
@@ -99,7 +102,6 @@ export default function CourseForm({ defaultValues, onSubmit, isLoading }) {
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="code"
@@ -128,105 +130,9 @@ export default function CourseForm({ defaultValues, onSubmit, isLoading }) {
             </FormItem>
           )}
         />
-
-        {/* Status Checkboxes */}
-        <div>
-          <FormLabel className="mb-2 block">Registration Status</FormLabel>
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="is_open_registration_member"
-              render={({ field }) => (
-                <FormItem
-                  onClick={(e) => {
-                    if (e.target.type !== 'checkbox') {
-                      field.onChange(!field.value)
-                    }
-                  }}
-                  className={`flex cursor-pointer items-center space-y-0 space-x-3 rounded-md border p-3 transition-colors ${
-                    field.value
-                      ? 'border-blue-200 bg-blue-50'
-                      : 'hover:bg-gray-50'
-                  }`}
-                >
-                  <FormControl>
-                    <input
-                      type="checkbox"
-                      checked={field.value}
-                      onChange={field.onChange}
-                      className="h-5 w-5 cursor-pointer rounded text-blue-600 focus:ring-blue-500"
-                    />
-                  </FormControl>
-                  <div>
-                    <span className="block text-sm font-medium text-gray-900 select-none">
-                      Open for Member
-                    </span>
-                    <span className="block text-xs text-gray-500 select-none">
-                      Allow students to enroll
-                    </span>
-                  </div>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="is_open_registration_mentor"
-              render={({ field }) => (
-                <FormItem
-                  onClick={(e) => {
-                    if (e.target.type !== 'checkbox') {
-                      field.onChange(!field.value)
-                    }
-                  }}
-                  className={`flex cursor-pointer items-center space-y-0 space-x-3 rounded-md border p-3 transition-colors ${
-                    field.value
-                      ? 'border-indigo-200 bg-indigo-50'
-                      : 'hover:bg-gray-50'
-                  }`}
-                >
-                  <FormControl>
-                    <input
-                      type="checkbox"
-                      checked={field.value}
-                      onChange={field.onChange}
-                      className="h-5 w-5 cursor-pointer rounded text-indigo-600 focus:ring-indigo-500"
-                    />
-                  </FormControl>
-                  <div>
-                    <span className="block text-sm font-medium text-gray-900 select-none">
-                      Open for Mentor
-                    </span>
-                    <span className="block text-xs text-gray-500 select-none">
-                      Allow mentors to apply
-                    </span>
-                  </div>
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-
-        <FormField
-          control={form.control}
-          name="content"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Full Content / Syllabus *</FormLabel>
-              <FormControl>
-                <textarea
-                  {...field}
-                  className="border-input placeholder:text-muted-foreground focus-visible:ring-ring h-64 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder="Detailed explanation of the course..."
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
       </div>
 
-      {/* KANAN */}
+      {/* ================= RIGHT ================= */}
       <div className="space-y-4 md:col-span-4">
         <div>
           <FormLabel className="mb-2 block">Thumbnail Image</FormLabel>
@@ -262,12 +168,11 @@ export default function CourseForm({ defaultValues, onSubmit, isLoading }) {
                 <div className="flex flex-col items-center">
                   <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
                   <div className="mt-2 flex text-sm text-gray-600">
-                    <span className="font-medium text-blue-600 focus-within:outline-none hover:text-blue-500">
+                    <span className="font-medium text-blue-600 hover:text-blue-500">
                       Click to Upload
                     </span>
                     <input
                       id="file-upload"
-                      name="file-upload"
                       type="file"
                       accept="image/*"
                       className="sr-only"
@@ -292,7 +197,7 @@ export default function CourseForm({ defaultValues, onSubmit, isLoading }) {
               <FormControl>
                 <textarea
                   {...field}
-                  className="border-input placeholder:text-muted-foreground focus-visible:ring-ring h-32 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                  className="h-32 w-full rounded-md border px-3 py-2 text-sm"
                   placeholder="Brief summary for card view..."
                 />
               </FormControl>
@@ -302,15 +207,18 @@ export default function CourseForm({ defaultValues, onSubmit, isLoading }) {
         />
       </div>
 
+      {/* ================= FOOTER ================= */}
       <div className="mt-2 flex justify-between border-t pt-6 md:col-span-12">
-        <Button
-          type="button"
-          onClick={() => {}}
-          variant="destructive"
-          className="h-max"
-        >
-          Remove Course
-        </Button>
+        {onDelete && (
+          <Button
+            type="button"
+            onClick={onDelete}
+            variant="destructive"
+            className="h-max"
+          >
+            Remove Course
+          </Button>
+        )}
 
         <div className="flex gap-3">
           <Button

@@ -25,7 +25,7 @@ export async function createScheduleAction({ body }) {
 // UPDATE SCHEDULE
 export async function updateScheduleAction({ id, body }) {
   try {
-    const res = await request.put(`/schedule/${id}`, body)
+    const res = await request.patch(`/schedule/${id}`, body)
     return res.data
   } catch (error) {
     return handleAxiosError(error)

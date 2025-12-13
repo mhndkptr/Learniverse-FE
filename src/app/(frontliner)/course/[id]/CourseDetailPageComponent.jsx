@@ -113,9 +113,10 @@ export default function CourseDetailPageComponent({ id }) {
               <h2 className="mb-6 border-b pb-4 text-xl font-bold text-gray-900">
                 Course Syllabus
               </h2>
-              <div className="prose prose-slate max-w-none leading-relaxed whitespace-pre-wrap text-gray-700">
-                {course.content}
-              </div>
+              <div
+                className="prose prose-slate max-w-none leading-relaxed text-gray-700 [&_h1]:text-3xl [&_h2]:text-2xl [&_h3]:text-xl"
+                dangerouslySetInnerHTML={{ __html: course.content || '' }}
+              />
             </div>
           </div>
 
@@ -206,20 +207,31 @@ export default function CourseDetailPageComponent({ id }) {
                 </h2>
                 <div className="space-y-4">
                   {course.mentors && course.mentors.length > 0 ? (
-                    course.mentors.map((mentorItem, index) => {
-                      // Gunakan user.id untuk detail mentor (halaman mentor/[id] menerima user_id)
-                      const preparedMentorData = {
-                        id: mentorItem.user?.id,
-                        user: {
-                          name: mentorItem.user?.name,
-                          profile_uri: mentorItem.user?.profile_uri,
-                        },
-                      }
+                    course.mentors
+                      .filter((m) => m.status === 'ACCEPTED')
+                      .filter((m, idx, arr) => {
+                        const uid = m.user?.id
+                        if (!uid) return true
+                        return (
+                          arr.findIndex(
+                            (x) => x.user?.id === uid && x.status === 'ACCEPTED'
+                          ) === idx
+                        )
+                      })
+                      .map((mentorItem, index) => {
+                        // Gunakan user.id untuk detail mentor (halaman mentor/[id] menerima user_id)
+                        const preparedMentorData = {
+                          id: mentorItem.user?.id,
+                          user: {
+                            name: mentorItem.user?.name,
+                            profile_uri: mentorItem.user?.profile_uri,
+                          },
+                        }
 
-                      return (
-                        <MentorCard key={index} mentor={preparedMentorData} />
-                      )
-                    })
+                        return (
+                          <MentorCard key={index} mentor={preparedMentorData} />
+                        )
+                      })
                   ) : (
                     <div className="py-8 text-center text-sm text-gray-400">
                       No mentors assigned yet.

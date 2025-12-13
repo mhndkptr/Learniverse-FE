@@ -1,0 +1,12 @@
+.ql-container {
+  overflow: visible;
+}
+
+.ql-toolbar.ql-snow {
+  z-index: 1;
+}
+
+.ql-tooltip {
+  z-index: 9999;
+  position: absolute;
+}

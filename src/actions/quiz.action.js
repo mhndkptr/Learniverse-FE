@@ -11,6 +11,15 @@ export async function getQuizByIdAction({ id }) {
   }
 }
 
+export async function getAllActiveQuizAction() {
+  try {
+    const res = await request.get(`/quiz/me/active`)
+    return res.data
+  } catch (error) {
+    return handleAxiosError(error)
+  }
+}
+
 export async function createQuizAction({ body }) {
   try {
     const res = await request.post('/quiz', body)

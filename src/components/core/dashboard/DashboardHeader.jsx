@@ -1,14 +1,21 @@
+'use client'
+
+import { Button } from '@/components/ui/button'
+import { useAuth } from '@/contexts/auth.context'
+
 export default function DashboardHeader() {
+  const { user } = useAuth()
+
   return (
-    <div className="bg-amber-700 px-4 py-8 text-white sm:px-6 lg:px-8">
+    <div className="bg-yellowSecondary-600 rounded-b-lg px-4 pt-26 pb-8 text-white sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <h1 className="mb-2 text-3xl font-bold md:text-4xl">
-          Welcome Back, Muhammad Hendika Putra!
+          Welcome Back, {user?.name}!
         </h1>
         <p className="mb-6 text-amber-100">Your Learning Journey Awaits</p>
-        <button className="rounded bg-slate-900 px-6 py-2 text-white transition-colors hover:bg-slate-800">
+        <Button variant="primary" size="lg">
           Enroll New Course
-        </button>
+        </Button>
       </div>
     </div>
   )

@@ -5,12 +5,12 @@ import YourTasks from '@/components/core/dashboard/YourTasks'
 export default function Dashboard() {
   return (
     <div className="flex">
-      <main className="flex w-full flex-col px-16 py-32">
+      <main className="flex w-full flex-col px-16">
         {/* Welcome Header */}
         <DashboardHeader />
 
         {/* Main Content */}
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full px-4 py-8 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* Left Column - Continue Learning */}
             <div className="lg:col-span-2">

@@ -14,6 +14,15 @@ export async function getAllCourseAction({ params }) {
   }
 }
 
+export async function getAllEnrolledCourseAction() {
+  try {
+    const res = await request.get('/course/me')
+    return res.data
+  } catch (error) {
+    return handleAxiosError(error)
+  }
+}
+
 export async function getCourseByIdAction({ id }) {
   try {
     const res = await request.get(`/course/${id}`)

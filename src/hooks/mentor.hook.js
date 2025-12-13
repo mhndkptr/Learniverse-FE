@@ -9,27 +9,31 @@ import {
   getMentorByIdAction,
   approveMentorAction,
   rejectMentorAction,
+  getPendingMentorRegistrationsAction,
 } from '@/actions/mentor.action'
 
-// --- ADMIN HOOKS ---
+// ==================================================================
+// 1. ORIGINAL BACKOFFICE HOOKS (DO NOT REMOVE/RENAME)
+// ==================================================================
 
-// GET LIST MENTOR
+// GET LIST MENTOR (BACKOFFICE)
 export function useGetAllMentorAdmin({ params }) {
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['getAllMentorAdmin', params],
     queryFn: () => getAllMentorAdminAction({ params }),
     refetchOnWindowFocus: false,
+    keepPreviousData: true,
   })
 
   return {
     mentors: data?.data ?? [],
     meta: data?.meta ?? null,
-    isLoading,
+    isLoading: isLoading || isFetching,
     refetch,
   }
 }
 
-// GET MENTOR DETAIL BY ID
+// GET MENTOR DETAIL BY ID (BACKOFFICE)
 export function useGetMentorById({ id }) {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['getMentorById', id],
@@ -45,7 +49,7 @@ export function useGetMentorById({ id }) {
   }
 }
 
-// UPDATE STATUS MENTOR (APPROVE/REJECT)
+// UPDATE STATUS MENTOR (BACKOFFICE)
 export function useUpdateMentorStatusMutation() {
   const queryClient = useQueryClient()
 
@@ -62,6 +66,7 @@ export function useUpdateMentorStatusMutation() {
         toast.success('Mentor status updated successfully')
         queryClient.invalidateQueries({ queryKey: ['getAllMentorAdmin'] })
         queryClient.invalidateQueries({ queryKey: ['getMentorById'] })
+        queryClient.invalidateQueries({ queryKey: ['mentors'] })
       } else {
         toast.error(data?.message || 'Failed to update status')
       }
@@ -72,7 +77,7 @@ export function useUpdateMentorStatusMutation() {
   })
 }
 
-// DELETE MENTOR
+// DELETE MENTOR (BACKOFFICE)
 export function useDeleteMentorMutation() {
   const queryClient = useQueryClient()
 
@@ -82,6 +87,7 @@ export function useDeleteMentorMutation() {
       if (data?.code === 200) {
         toast.success('Mentor deleted successfully')
         queryClient.invalidateQueries({ queryKey: ['getAllMentorAdmin'] })
+        queryClient.invalidateQueries({ queryKey: ['mentors'] })
       } else {
         toast.error(data?.message || 'Failed to delete mentor')
       }
@@ -92,16 +98,15 @@ export function useDeleteMentorMutation() {
   })
 }
 
-// --- REGISTRATION HOOK ---
-
-export function useMentorRegistrationMutation({ successAction }) {
+// REGISTRATION HOOK
+export function useMentorRegistrationMutation({ successAction } = {}) {
   const addMentorRegistrationMutation = useMutation({
     mutationFn: (data) =>
       createMentorRegistrationAction({ body: data.payload }),
     onSuccess: (data) => {
       if (data?.code === 201 || data?.code === 200) {
-        successAction?.()
-        toast.success(data?.message)
+        if (successAction) successAction()
+        toast.success(data?.message || 'Registration successful')
       } else {
         toast.error('Registration failed', {
           description: data?.message,
@@ -114,4 +119,32 @@ export function useMentorRegistrationMutation({ successAction }) {
   })
 
   return { addMentorRegistrationMutation }
+}
+
+// ==================================================================
+// 2. FRONTLINER ALIASES & NEW HOOKS
+
+export const useGetMentors = useGetAllMentorAdmin
+
+export const useGetMentor = useGetMentorById
+
+export function useRegisterMentor(onSuccessCallback) {
+  const { addMentorRegistrationMutation } = useMentorRegistrationMutation({
+    successAction: onSuccessCallback,
+  })
+  return addMentorRegistrationMutation
+}
+
+export function useGetPendingMentors() {
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['mentor-approval-pending'],
+    queryFn: getPendingMentorRegistrationsAction,
+    select: (res) => res?.data ?? [],
+  })
+
+  return {
+    pendingMentors: data ?? [],
+    isLoading,
+    refetch,
+  }
 }

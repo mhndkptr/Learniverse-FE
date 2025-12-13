@@ -1,37 +1,79 @@
 'use client'
 
-import { useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
-import { useMentorRegistrationMutation } from '@/hooks/mentor.hook'
+import { useState, useMemo } from 'react'
+import { useRegisterMentor } from '@/hooks/mentor.hook'
+import { useGetAllMentorAdmin } from '@/hooks/mentor.hook'
+import { useGetAllCourse } from '@/hooks/course.hook'
 import { useAuth } from '@/contexts/auth.context'
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
 
 export default function MentorRegistrationForm() {
   const { user } = useAuth()
+  const router = useRouter()
+
+  // Ambil data kursus
+  const { courses } = useGetAllCourse({
+    params: { pagination: { limit: 100 } },
+  })
+
   const [formData, setFormData] = useState({
     bio: '',
     reason: '',
     motivation: '',
     cvUrl: '',
     portfolioUrl: '',
-    paymentAccountName: '',
-    paymentAccount: '',
+    courseId: '',
   })
 
-  const [showPaymentName, setShowPaymentName] = useState(false)
-  const [showPaymentAccount, setShowPaymentAccount] = useState(false)
+  // Logic ketat untuk menentukan apakah form valid
+  const isFormInvalid = useMemo(() => {
+    // 1. Cek minimal panjang karakter (Min 10 sesuai skema backend)
+    const minLengthCheck =
+      formData.bio.trim().length < 10 ||
+      formData.reason.trim().length < 10 ||
+      formData.motivation.trim().length < 10
 
-  const { addMentorRegistrationMutation } = useMentorRegistrationMutation({
-    successAction: () => {
-      setFormData({
-        reason: '',
-        motivation: '',
-        cvUrl: '',
-        portfolioUrl: '',
-        paymentAccountName: '',
-        paymentAccount: '',
-      })
-    },
+    if (minLengthCheck) return true
+
+    // 2. Cek kelengkapan ID dan field wajib
+    if (!formData.courseId || !formData.cvUrl || !formData.portfolioUrl)
+      return true
+
+    // 3. Cek format URL (Wajib dimulai dengan http/https untuk lolos Joi .uri())
+    const invalidUrl =
+      !formData.cvUrl.trim().startsWith('http') ||
+      !formData.portfolioUrl.trim().startsWith('http')
+
+    if (invalidUrl) return true
+
+    return false
+  }, [formData])
+
+  // Hook mutation
+  const registerMutation = useRegisterMentor(() => {
+    // Reset form on success
+    setFormData({
+      bio: '',
+      reason: '',
+      motivation: '',
+      cvUrl: '',
+      portfolioUrl: '',
+      courseId: '',
+    })
+    toast.success('Pendaftaran berhasil diajukan! Menunggu review admin.')
+    router.push('/my/history/mentor')
   })
+
+  // Ambil daftar aplikasi mentor yang pernah dibuat oleh user ini
+  const { mentors: myMentorApplications, isLoading: isLoadingMentorApps } =
+    useGetAllMentorAdmin({
+      params: {
+        filter: { user_id: user?.id },
+        get_all: true,
+      },
+    })
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -41,64 +83,142 @@ export default function MentorRegistrationForm() {
     }))
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
-    addMentorRegistrationMutation.mutate({
-      payload: {
-        bio: formData.bio,
-        reason: formData.reason,
-        motivation: formData.motivation,
-        cv_uri: formData.cvUrl,
-        portfolio_uri: formData.portfolioUrl,
-        user_id: user.id,
-        course_id: Joi.string().uuid().required(),
-      },
-    })
+
+    if (!user?.id) {
+      toast.error('Gagal: User ID tidak ditemukan. Mohon login ulang.')
+      return
+    }
+
+    if (isLoadingMentorApps) {
+      toast.error('Sedang memuat riwayat pendaftaran, coba lagi sebentar.')
+      return
+    }
+
+    const alreadyAppliedSameCourse = myMentorApplications.some(
+      (m) =>
+        m.course_id === formData.courseId &&
+        m.status !== 'REJECTED' // boleh daftar lagi jika sebelumnya ditolak
+    )
+
+    if (alreadyAppliedSameCourse) {
+      toast.error('Anda sudah terdaftar/menunggu review untuk course ini.')
+      return
+    }
+
+    if (isFormInvalid) {
+      toast.error(
+        'Gagal: Mohon lengkapi semua field. Pastikan teks minimal 10 karakter dan URL valid (diawali http/https).'
+      )
+      return
+    }
+
+    // START REVISI KRITIS: Mengubah nama field ke snake_case
+    const payload = {
+      bio: formData.bio.trim(),
+      reason: formData.reason.trim(),
+      motivation: formData.motivation.trim(),
+
+      // FIX: Mengganti camelCase ke snake_case sesuai backend
+      cv_uri: formData.cvUrl.trim(),
+      portfolio_uri: formData.portfolioUrl.trim(),
+
+      user_id: user.id, // ID User yang terautentikasi
+      course_id: formData.courseId,
+    }
+    // END REVISI KRITIS
+
+    registerMutation.mutate({ payload })
   }
 
   return (
-    <div className="w-full rounded-lg border border-gray-200 bg-white p-8">
+    <div className="w-full rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
       <h1 className="text-foreground mb-8 text-center text-3xl font-bold">
         Mentor Registration Form
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Reason Field */}
+        {/* Course Selection */}
+        <div>
+          <label
+            htmlFor="courseId"
+            className="text-foreground mb-2 block text-sm font-medium"
+          >
+            Select Course to Mentor <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="courseId"
+            name="courseId"
+            value={formData.courseId}
+            onChange={handleInputChange}
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-gray-50"
+            required
+            disabled={registerMutation.isPending}
+          >
+            <option value="" disabled>
+              -- Select a Course --
+            </option>
+            {courses.map((course) => (
+              <option key={course.id} value={course.id}>
+                {course.title} ({course.code})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Bio Field */}
         <div>
           <label
             htmlFor="bio"
             className="text-foreground mb-2 block text-sm font-medium"
           >
-            Bio
+            Bio <span className="text-red-500">*</span>
           </label>
           <textarea
             id="bio"
             name="bio"
             value={formData.bio}
             onChange={handleInputChange}
-            placeholder="Enter your bio to be a mentor"
-            className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            rows={4}
+            placeholder="Tell us briefly about yourself (min 10 characters)..."
+            className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-gray-50"
+            rows={3}
             required
+            minLength={10}
+            maxLength={1000}
+            disabled={registerMutation.isPending}
           />
+          {formData.bio.trim().length > 0 &&
+            formData.bio.trim().length < 10 && (
+              <p className="mt-1 text-xs text-red-500">Minimal 10 karakter.</p>
+            )}
         </div>
+
+        {/* Reason Field */}
         <div>
           <label
             htmlFor="reason"
             className="text-foreground mb-2 block text-sm font-medium"
           >
-            Reason
+            Reason <span className="text-red-500">*</span>
           </label>
           <textarea
             id="reason"
             name="reason"
             value={formData.reason}
             onChange={handleInputChange}
-            placeholder="Enter your reasons for wanting to be a mentor"
-            className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            rows={4}
+            placeholder="Why do you want to be a mentor? (min 10 characters)"
+            className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-gray-50"
+            rows={3}
             required
+            minLength={10}
+            maxLength={1000}
+            disabled={registerMutation.isPending}
           />
+          {formData.reason.trim().length > 0 &&
+            formData.reason.trim().length < 10 && (
+              <p className="mt-1 text-xs text-red-500">Minimal 10 karakter.</p>
+            )}
         </div>
 
         {/* Motivation Field */}
@@ -107,18 +227,25 @@ export default function MentorRegistrationForm() {
             htmlFor="motivation"
             className="text-foreground mb-2 block text-sm font-medium"
           >
-            Motivation
+            Motivation <span className="text-red-500">*</span>
           </label>
           <textarea
             id="motivation"
             name="motivation"
             value={formData.motivation}
             onChange={handleInputChange}
-            placeholder="Enter your motivation"
-            className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            rows={4}
+            placeholder="What is your motivation? (min 10 characters)"
+            className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-gray-50"
+            rows={3}
             required
+            minLength={10}
+            maxLength={1000}
+            disabled={registerMutation.isPending}
           />
+          {formData.motivation.trim().length > 0 &&
+            formData.motivation.trim().length < 10 && (
+              <p className="mt-1 text-xs text-red-500">Minimal 10 karakter.</p>
+            )}
         </div>
 
         {/* CV Url Field */}
@@ -127,7 +254,7 @@ export default function MentorRegistrationForm() {
             htmlFor="cvUrl"
             className="text-foreground mb-2 block text-sm font-medium"
           >
-            CV Url
+            CV URL (Google Drive/Link) <span className="text-red-500">*</span>
           </label>
           <input
             type="url"
@@ -135,10 +262,17 @@ export default function MentorRegistrationForm() {
             name="cvUrl"
             value={formData.cvUrl}
             onChange={handleInputChange}
-            placeholder="https://drive.google.com..."
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            placeholder="Wajib dimulai dengan https:// atau http://"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-gray-50"
             required
+            disabled={registerMutation.isPending}
           />
+          {formData.cvUrl.trim().length > 0 &&
+            !formData.cvUrl.trim().startsWith('http') && (
+              <p className="mt-1 text-xs text-red-500">
+                Format URL harus valid (diawali http:// atau https://).
+              </p>
+            )}
         </div>
 
         {/* Portfolio Url Field */}
@@ -147,7 +281,7 @@ export default function MentorRegistrationForm() {
             htmlFor="portfolioUrl"
             className="text-foreground mb-2 block text-sm font-medium"
           >
-            Portfolio Url
+            Portfolio URL <span className="text-red-500">*</span>
           </label>
           <input
             type="url"
@@ -155,79 +289,32 @@ export default function MentorRegistrationForm() {
             name="portfolioUrl"
             value={formData.portfolioUrl}
             onChange={handleInputChange}
-            placeholder="https://drive.google.com..."
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            placeholder="Wajib dimulai dengan https:// atau http://"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-gray-50"
             required
+            disabled={registerMutation.isPending}
           />
-        </div>
-
-        {/* Payment Account Name Field */}
-        <div>
-          <label
-            htmlFor="paymentAccountName"
-            className="text-foreground mb-2 block text-sm font-medium"
-          >
-            Payment Account Name
-          </label>
-          <div className="relative">
-            <input
-              type={showPaymentName ? 'text' : 'password'}
-              id="paymentAccountName"
-              name="paymentAccountName"
-              value={formData.paymentAccountName}
-              onChange={handleInputChange}
-              placeholder="Enter your name in payment account"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-10 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPaymentName(!showPaymentName)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 transform text-gray-400 hover:text-gray-600"
-            >
-              {showPaymentName ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Payment Account Field */}
-        <div>
-          <label
-            htmlFor="paymentAccount"
-            className="text-foreground mb-2 block text-sm font-medium"
-          >
-            Payment Account
-          </label>
-          <div className="relative">
-            <input
-              type={showPaymentAccount ? 'text' : 'password'}
-              id="paymentAccount"
-              name="paymentAccount"
-              value={formData.paymentAccount}
-              onChange={handleInputChange}
-              placeholder="Enter your payment account"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-10 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPaymentAccount(!showPaymentAccount)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 transform text-gray-400 hover:text-gray-600"
-            >
-              {showPaymentAccount ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
+          {formData.portfolioUrl.trim().length > 0 &&
+            !formData.portfolioUrl.trim().startsWith('http') && (
+              <p className="mt-1 text-xs text-red-500">
+                Format URL harus valid (diawali http:// atau https://).
+              </p>
+            )}
         </div>
 
         {/* Register Button */}
         <button
           type="submit"
-          disabled={addMentorRegistrationMutation.isPending}
+          disabled={registerMutation.isPending || isFormInvalid}
           className="w-full rounded-lg bg-blue-900 px-4 py-3 font-semibold text-white transition-colors duration-200 hover:bg-blue-800 disabled:bg-gray-400"
         >
-          {addMentorRegistrationMutation.isPending
-            ? 'Registering...'
-            : 'Register'}
+          {registerMutation.isPending ? (
+            <div className="flex items-center justify-center gap-2">
+              <Loader2 className="size-4 animate-spin" /> Submitting...
+            </div>
+          ) : (
+            'Register as Mentor'
+          )}
         </button>
       </form>
     </div>

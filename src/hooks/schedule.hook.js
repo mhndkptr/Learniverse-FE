@@ -10,11 +10,12 @@ import {
 } from '@/actions/schedule.action'
 
 // ✅ GET ALL SCHEDULE
-export function useGetAllSchedule({ params }) {
+export function useGetAllSchedule({ params, enabled = true }) {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['getAllSchedule', params],
     queryFn: () => getAllScheduleAction({ params }),
     retry: false,
+    enabled,
   })
 
   // convert data dari backend → format kalender UI kamu
@@ -22,11 +23,29 @@ export function useGetAllSchedule({ params }) {
     if (!data || data.code !== 200) return {}
 
     const result = {}
+    const filterCourseId =
+      params?.filterCourseId || params?.filter?.course_id || null
 
     data.data.forEach((sch) => {
-      const date = sch.start_time.split('T')[0]
-      const start = sch.start_time.substring(11, 16)
-      const end = sch.end_time.substring(11, 16)
+      if (filterCourseId && sch.course_id !== filterCourseId) return
+
+      const startDate = new Date(sch.start_time)
+      const endDate = new Date(sch.end_time)
+
+      // gunakan tanggal lokal (format YYYY-MM-DD) untuk key kalender
+      const date = startDate.toLocaleDateString('en-CA')
+
+      const start = startDate.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
+
+      const end = endDate.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
 
       if (!result[date]) result[date] = []
 
@@ -34,8 +53,10 @@ export function useGetAllSchedule({ params }) {
         id: sch.id,
         title: sch.title,
         course: sch.course?.title ?? '-',
+        courseId: sch.course_id,
         startTime: start,
         endTime: end,
+        raw: sch,
       })
     })
 

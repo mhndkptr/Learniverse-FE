@@ -18,6 +18,7 @@ export default function AddScheduleDialog({
   initialData,
   onSave,
   userCourses = [],
+  lockCourse = false,
 }) {
   const [date, setDate] = useState(defaultDate || '')
   const [startTime, setStartTime] = useState('')
@@ -153,19 +154,25 @@ export default function AddScheduleDialog({
           {/* Course Dropdown */}
           <div className="space-y-1">
             <label className="text-sm font-medium">Course</label>
-            <select
-              className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
-              value={courseId}
-              onChange={(e) => setCourseId(e.target.value)}
-              disabled={userCourses.length === 1}
-            >
-              <option value="">Select Course</option>
-              {userCourses.map((course) => (
-                <option key={course.id} value={course.id}>
-                  {course.title || course.name}
-                </option>
-              ))}
-            </select>
+            {lockCourse && userCourses.length === 1 ? (
+              <div className="w-full rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                {userCourses[0].title || userCourses[0].name || 'Course'}
+              </div>
+            ) : (
+              <select
+                className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+                value={courseId}
+                onChange={(e) => setCourseId(e.target.value)}
+                disabled={userCourses.length === 1}
+              >
+                <option value="">Select Course</option>
+                {userCourses.map((course) => (
+                  <option key={course.id} value={course.id}>
+                    {course.title || course.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
 

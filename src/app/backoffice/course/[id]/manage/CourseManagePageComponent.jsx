@@ -379,9 +379,11 @@ export default function CourseManagePageComponent({ id }) {
           if (row.status === 'ON_REVIEW')
             colorClass = 'bg-yellow-600 hover:bg-yellow-700'
 
+          const statusLabel = (row.status || 'UNKNOWN').replace('_', ' ')
+
           return (
             <Badge className={`${colorClass} text-white`}>
-              {row.status.replace('_', ' ')}
+              {statusLabel}
             </Badge>
           )
         },

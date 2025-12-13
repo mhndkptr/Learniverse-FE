@@ -10,7 +10,6 @@ import {
   ExternalLink,
   Loader2,
   AlertCircle,
-  User,
   Mail,
   BookOpen,
 } from 'lucide-react'
@@ -23,6 +22,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 
+// Import hooks dan components
 import {
   useGetMentorById,
   useUpdateMentorStatusMutation,
@@ -37,7 +37,7 @@ export default function MentorDetailAprovalPageComponent({
   const router = useRouter()
 
   // 1. Fetch Data Mentor
-  const { mentor, isLoading, refetch } = useGetMentorById({ id: mentorId })
+  const { mentor, isLoading } = useGetMentorById({ id: mentorId })
 
   // 2. Fetch Data Accepted Mentorships (History User)
   const { data: userHistoryData } = useQuery({
@@ -193,8 +193,9 @@ export default function MentorDetailAprovalPageComponent({
           </Card>
         </div>
 
-        {/* KOLOM KANAN: FORM FIELDS (READ ONLY) */}
+        {/* KOLOM KANAN: FORM FIELDS & EXPERIENCE */}
         <div className="space-y-6 md:col-span-2">
+          {/* Card Detail Aplikasi */}
           <Card className="border-gray-200 shadow-sm">
             <CardHeader>
               <CardTitle className="text-lg font-semibold">
@@ -289,7 +290,6 @@ export default function MentorDetailAprovalPageComponent({
                       </p>
                       <p className="truncate text-xs text-gray-500">
                         {mentor.portfolio_uri || ''}
-                        Click to visit URL
                       </p>
                       <p className="truncate text-xs font-semibold text-gray-500">
                         Click to visit URL

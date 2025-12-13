@@ -37,7 +37,6 @@ export async function deleteMentorAction({ id }) {
 // APPROVE MENTOR
 export async function approveMentorAction(id) {
   try {
-    // Sesuaikan path ini dengan route backend Anda (misal PATCH /mentor/:id)
     const res = await request.patch(`/mentor/${id}`, { status: 'ACCEPTED' })
     return res.data
   } catch (error) {
@@ -48,7 +47,10 @@ export async function approveMentorAction(id) {
 // REJECT MENTOR
 export async function rejectMentorAction(id, reason) {
   try {
-    const res = await request.patch(`/mentor/${id}`, { status: 'REJECTED' })
+    const res = await request.patch(`/mentor/${id}`, {
+      status: 'REJECTED',
+      reason: reason,
+    })
     return res.data
   } catch (error) {
     return handleAxiosError(error)
@@ -66,11 +68,11 @@ export async function createMentorRegistrationAction({ body }) {
   }
 }
 
+// validasi/approval list
 export async function getPendingMentorRegistrationsAction() {
   try {
-    // Gunakan request instance, bukan axios langsung
     const res = await request.get('/mentor', {
-      params: { filter: { status: 'ON_REVIEW' } },
+      params: { filter: { status: 'ON_REVIEW' }, include_relation: ['user'] },
     })
     return res.data
   } catch (error) {

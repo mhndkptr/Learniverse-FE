@@ -191,7 +191,11 @@ export default function MyHistoryOrderPage() {
                           )}
 
                           {transaction?.status === 'settlement' && (
-                            <Button variant={'primary'} className="flex-1">
+                            <Button
+                              variant={'primary'}
+                              className="flex-1"
+                              onClick={() => (window.location.href = '/dashboard/course')}
+                            >
                               Go to Course
                               <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>

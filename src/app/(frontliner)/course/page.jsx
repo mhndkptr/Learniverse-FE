@@ -30,7 +30,7 @@ export default function CoursePage() {
 
   return (
     <div className="flex h-full">
-      <main className="flex h-full w-full flex-col items-center justify-start px-16 py-32">
+      <main className="flex h-full w-full flex-col items-center justify-start px-5 py-24 md:px-16 md:py-32">
         <h1 className="mb-8 text-center text-3xl font-bold text-gray-900">
           Our Courses
         </h1>

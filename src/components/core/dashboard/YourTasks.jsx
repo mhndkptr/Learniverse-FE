@@ -65,7 +65,7 @@ export default function YourTasks() {
                   className="flex gap-3 border-b border-gray-200 pb-3 last:border-b-0"
                 >
                   {/* Thumbnail Image */}
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <img
                       // PERBAIKAN: Menggunakan 'task' bukan 'quiz'
                       // Mengambil gambar dari nested object 'course'
@@ -82,7 +82,7 @@ export default function YourTasks() {
                     </h4>
 
                     {/* Menampilkan Nama Course (cth: SISOP) agar lebih jelas */}
-                    <p className="mb-2 truncate text-xs font-medium text-amber-700">
+                    <p className="text-yellowSecondary-600 mb-2 truncate text-xs font-medium">
                       {task.course?.title}
                     </p>
 

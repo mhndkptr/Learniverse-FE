@@ -5,7 +5,7 @@ import YourTasks from '@/components/core/dashboard/YourTasks'
 export default function Dashboard() {
   return (
     <div className="flex">
-      <main className="flex w-full flex-col px-16">
+      <main className="flex w-full flex-col px-0 md:px-16">
         {/* Welcome Header */}
         <DashboardHeader />
 

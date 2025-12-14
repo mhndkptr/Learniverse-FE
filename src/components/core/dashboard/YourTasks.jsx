@@ -65,7 +65,7 @@ export default function YourTasks() {
                   className="flex gap-3 border-b border-gray-200 pb-3 last:border-b-0"
                 >
                   {/* Thumbnail Image */}
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <img
                       // PERBAIKAN: Menggunakan 'task' bukan 'quiz'
                       // Mengambil gambar dari nested object 'course'

@@ -1,6 +1,6 @@
 export default function CourseTabs({ tabs, activeTab, setActiveTab }) {
   return (
-    <div className="mt-8 border-b px-4 sm:px-6 lg:px-8">
+    <div className="mt-6 border-b">
       <div className="flex gap-8 overflow-x-auto">
         {tabs.map((tab) => (
           <button

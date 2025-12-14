@@ -1,12 +1,27 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2, UploadCloud } from 'lucide-react'
+import {
+  Bold,
+  Eraser,
+  Heading1,
+  Heading2,
+  Heading3,
+  Italic,
+  Link2,
+  List,
+  ListOrdered,
+  Loader2,
+  Strikethrough,
+  Underline as UnderlineIcon,
+  Unlink,
+  UploadCloud,
+} from 'lucide-react'
 import {
   FormControl,
   FormField,
@@ -15,8 +30,11 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import BaseForm from '@/components/_shared/BaseForm'
-import 'quill/dist/quill.snow.css'
-import '@/quill-overrides.css'
+import { EditorContent, useEditor } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import UnderlineExtension from '@tiptap/extension-underline'
+import LinkExtension from '@tiptap/extension-link'
+import '@/richtext.css'
 
 // Schema Validasi
 const courseSchema = z.object({
@@ -41,8 +59,6 @@ export default function CourseForm({
   onDelete,
 }) {
   const [preview, setPreview] = useState(null)
-  const editorRef = useRef(null)
-  const quillInstance = useRef(null)
 
   const form = useForm({
     resolver: zodResolver(courseSchema),
@@ -55,6 +71,34 @@ export default function CourseForm({
       is_open_registration_member: false,
       is_open_registration_mentor: false,
       cover: null,
+    },
+  })
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3],
+        },
+      }),
+      UnderlineExtension,
+      LinkExtension.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          rel: 'noopener noreferrer',
+          target: '_blank',
+        },
+      }),
+    ],
+    content: form.getValues('content') || '',
+    onUpdate: ({ editor }) => {
+      form.setValue('content', editor.getHTML(), { shouldValidate: true })
+    },
+    editorProps: {
+      attributes: {
+        class:
+          'prose prose-slate max-w-none min-h-[220px] px-3 py-2 focus:outline-none',
+      },
     },
   })
 
@@ -78,6 +122,12 @@ export default function CourseForm({
     }
   }, [defaultValues, form])
 
+  useEffect(() => {
+    if (editor && defaultValues?.content !== undefined) {
+      editor.commands.setContent(defaultValues.content || '', false)
+    }
+  }, [editor, defaultValues])
+
   const handleFileChange = (e) => {
     const file = e.target.files[0]
     if (file) {
@@ -85,52 +135,6 @@ export default function CourseForm({
       setPreview(URL.createObjectURL(file))
     }
   }
-
-  const quillModules = useMemo(
-    () => ({
-      toolbar: [
-        [{ header: [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ list: 'ordered' }, { list: 'bullet' }],
-        ['link'],
-        ['clean'],
-      ],
-    }),
-    []
-  )
-
-  // Inisialisasi Quill editor
-  useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      const Quill = (await import('quill')).default
-      if (!mounted || !editorRef.current || quillInstance.current) return
-
-      const quill = new Quill(editorRef.current, {
-        theme: 'snow',
-        modules: quillModules,
-      })
-
-      quill.on('text-change', () => {
-        form.setValue('content', quill.root.innerHTML, { shouldValidate: true })
-      })
-
-      // Set konten awal dari form
-      quill.root.innerHTML = form.getValues('content') || ''
-      quillInstance.current = quill
-    })()
-
-    return () => {
-      mounted = false
-    }
-  }, [form, quillModules])
-
-  // Sinkronkan konten ketika defaultValues berubah (mode edit)
-  useEffect(() => {
-    if (quillInstance.current && defaultValues?.content) {
-      quillInstance.current.root.innerHTML = defaultValues.content
-    }
-  }, [defaultValues])
 
   return (
     <BaseForm
@@ -269,8 +273,18 @@ export default function CourseForm({
             <FormItem>
               <FormLabel>Full Content / Syllabus *</FormLabel>
               <FormControl>
-                <div className="border-input focus-visible:ring-ring min-h-[200px] rounded-md border bg-transparent text-sm shadow-sm focus-visible:ring-1 focus-visible:outline-none">
-                  <div ref={editorRef} />
+                <div className="space-y-2">
+                  <input type="hidden" {...field} value={field.value || ''} />
+                  <div className="rounded-md border border-input text-sm shadow-sm">
+                    <EditorToolbar editor={editor} />
+                    {editor ? (
+                      <EditorContent editor={editor} className="richtext px-3 py-2" />
+                    ) : (
+                      <div className="flex min-h-[220px] items-center justify-center text-gray-400">
+                        Loading editor...
+                      </div>
+                    )}
+                  </div>
                 </div>
               </FormControl>
               <FormMessage />
@@ -392,5 +406,140 @@ export default function CourseForm({
         </div>
       </div>
     </BaseForm>
+  )
+}
+
+function EditorToolbar({ editor }) {
+  if (!editor) {
+    return (
+      <div className="border-b border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-400">
+        Menyiapkan editor...
+      </div>
+    )
+  }
+
+  const handleSetLink = () => {
+    const previousUrl = editor.getAttributes('link').href || ''
+    const url = window.prompt('Masukkan URL', previousUrl || 'https://')
+    if (url === null) return
+    const trimmed = url.trim()
+    if (trimmed === '') {
+      editor.chain().focus().unsetLink().run()
+      return
+    }
+    editor
+      .chain()
+      .focus()
+      .extendMarkRange('link')
+      .setLink({ href: trimmed, target: '_blank', rel: 'noopener noreferrer' })
+      .run()
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 bg-gray-50 px-3 py-2">
+      <ToolbarButton
+        ariaLabel="Heading 1"
+        active={editor.isActive('heading', { level: 1 })}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+      >
+        <Heading1 className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        ariaLabel="Heading 2"
+        active={editor.isActive('heading', { level: 2 })}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+      >
+        <Heading2 className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        ariaLabel="Heading 3"
+        active={editor.isActive('heading', { level: 3 })}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+      >
+        <Heading3 className="h-4 w-4" />
+      </ToolbarButton>
+      <div className="mx-1 h-5 w-px bg-gray-200" />
+      <ToolbarButton
+        ariaLabel="Bold"
+        active={editor.isActive('bold')}
+        onClick={() => editor.chain().focus().toggleBold().run()}
+      >
+        <Bold className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        ariaLabel="Italic"
+        active={editor.isActive('italic')}
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+      >
+        <Italic className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        ariaLabel="Underline"
+        active={editor.isActive('underline')}
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
+      >
+        <UnderlineIcon className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        ariaLabel="Strikethrough"
+        active={editor.isActive('strike')}
+        onClick={() => editor.chain().focus().toggleStrike().run()}
+      >
+        <Strikethrough className="h-4 w-4" />
+      </ToolbarButton>
+      <div className="mx-1 h-5 w-px bg-gray-200" />
+      <ToolbarButton
+        ariaLabel="Ordered list"
+        active={editor.isActive('orderedList')}
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+      >
+        <ListOrdered className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        ariaLabel="Bullet list"
+        active={editor.isActive('bulletList')}
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+      >
+        <List className="h-4 w-4" />
+      </ToolbarButton>
+      <div className="mx-1 h-5 w-px bg-gray-200" />
+      <ToolbarButton ariaLabel="Add link" onClick={handleSetLink}>
+        <Link2 className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        ariaLabel="Remove link"
+        disabled={!editor.isActive('link')}
+        onClick={() => editor.chain().focus().unsetLink().run()}
+      >
+        <Unlink className="h-4 w-4" />
+      </ToolbarButton>
+      <div className="mx-1 h-5 w-px bg-gray-200" />
+      <ToolbarButton
+        ariaLabel="Clear formatting"
+        onClick={() =>
+          editor.chain().focus().unsetAllMarks().clearNodes().run()
+        }
+      >
+        <Eraser className="h-4 w-4" />
+      </ToolbarButton>
+    </div>
+  )
+}
+
+function ToolbarButton({ active, onClick, children, ariaLabel, disabled }) {
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      disabled={disabled}
+      onClick={onClick}
+      className={`flex h-8 w-8 items-center justify-center rounded border text-xs transition ${
+        active
+          ? 'border-[#0E1B50] bg-[#0E1B50] text-white'
+          : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+      } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
+    >
+      {children}
+    </button>
   )
 }

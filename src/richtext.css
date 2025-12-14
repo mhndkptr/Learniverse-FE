@@ -1,0 +1,55 @@
+.richtext {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: #1f2937;
+}
+
+.richtext h1 {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.richtext h2 {
+  font-size: 1.5rem;
+  line-height: 2.125rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.richtext h3 {
+  font-size: 1.25rem;
+  line-height: 1.875rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.richtext p {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.richtext p:empty::before {
+  content: '\00a0';
+  display: block;
+  height: 0.75rem;
+}
+
+.richtext ul,
+.richtext ol {
+  margin: 0.5rem 0 0.75rem 1.5rem;
+  padding-left: 1rem;
+}
+
+.richtext li {
+  margin-bottom: 0.25rem;
+}
+
+.richtext a {
+  color: #2563eb;
+  text-decoration: underline;
+}

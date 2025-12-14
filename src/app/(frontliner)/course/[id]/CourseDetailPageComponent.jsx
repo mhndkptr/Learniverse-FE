@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useGetCourseById } from '@/hooks/course.hook'
 import { useAuth } from '@/contexts/auth.context'
+import '@/richtext.css'
 
 export default function CourseDetailPageComponent({ id }) {
   const { user } = useAuth()
@@ -114,7 +115,7 @@ export default function CourseDetailPageComponent({ id }) {
                 Course Syllabus
               </h2>
               <div
-                className="prose prose-slate max-w-none leading-relaxed text-gray-700 [&_h1]:text-3xl [&_h2]:text-2xl [&_h3]:text-xl"
+                className="richtext leading-relaxed text-gray-700"
                 dangerouslySetInnerHTML={{ __html: course.content || '' }}
               />
             </div>

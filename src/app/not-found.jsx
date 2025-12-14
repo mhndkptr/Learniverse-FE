@@ -6,7 +6,7 @@ import Link from 'next/link'
 export default function NotFoundPage() {
   return (
     <section className="bg-bluePrimary-500">
-      <div className="container mx-auto min-h-screen px-6 py-12 lg:flex lg:items-center lg:gap-12">
+      <div className="container mx-auto flex min-h-screen flex-col-reverse items-center justify-center px-5 py-12 md:px-16 lg:flex-row lg:gap-12">
         <div className="w-full lg:w-1/2">
           <p className="text-sm font-medium text-white">404 error</p>
           <h1 className="mt-3 text-2xl font-semibold text-white md:text-3xl">
@@ -50,7 +50,7 @@ export default function NotFoundPage() {
 
         <div className="relative mt-12 w-full lg:mt-0 lg:w-1/2">
           <Image
-            className="w-full max-w-lg lg:mx-auto"
+            className="w-1/2 max-w-lg md:w-full lg:mx-auto"
             src="/assets/images/img-404-illustration.svg"
             alt="404 Illustration"
             width={500}

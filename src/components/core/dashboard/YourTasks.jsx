@@ -82,12 +82,8 @@ export default function YourTasks() {
                     </h4>
 
                     {/* Menampilkan Nama Course (cth: SISOP) agar lebih jelas */}
-                    <p className="mb-1 truncate text-xs font-medium text-amber-700">
+                    <p className="mb-2 truncate text-xs font-medium text-amber-700">
                       {task.course?.title}
-                    </p>
-
-                    <p className="mb-2 line-clamp-1 text-xs text-gray-600">
-                      {task.description}
                     </p>
 
                     <Button

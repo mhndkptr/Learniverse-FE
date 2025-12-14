@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -15,6 +15,8 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import BaseForm from '@/components/_shared/BaseForm'
+import 'quill/dist/quill.snow.css'
+import '@/quill-overrides.css'
 
 // Schema Validasi
 const courseSchema = z.object({
@@ -39,6 +41,8 @@ export default function CourseForm({
   onDelete,
 }) {
   const [preview, setPreview] = useState(null)
+  const editorRef = useRef(null)
+  const quillInstance = useRef(null)
 
   const form = useForm({
     resolver: zodResolver(courseSchema),
@@ -81,6 +85,52 @@ export default function CourseForm({
       setPreview(URL.createObjectURL(file))
     }
   }
+
+  const quillModules = useMemo(
+    () => ({
+      toolbar: [
+        [{ header: [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['link'],
+        ['clean'],
+      ],
+    }),
+    []
+  )
+
+  // Inisialisasi Quill editor
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      const Quill = (await import('quill')).default
+      if (!mounted || !editorRef.current || quillInstance.current) return
+
+      const quill = new Quill(editorRef.current, {
+        theme: 'snow',
+        modules: quillModules,
+      })
+
+      quill.on('text-change', () => {
+        form.setValue('content', quill.root.innerHTML, { shouldValidate: true })
+      })
+
+      // Set konten awal dari form
+      quill.root.innerHTML = form.getValues('content') || ''
+      quillInstance.current = quill
+    })()
+
+    return () => {
+      mounted = false
+    }
+  }, [form, quillModules])
+
+  // Sinkronkan konten ketika defaultValues berubah (mode edit)
+  useEffect(() => {
+    if (quillInstance.current && defaultValues?.content) {
+      quillInstance.current.root.innerHTML = defaultValues.content
+    }
+  }, [defaultValues])
 
   return (
     <BaseForm
@@ -219,11 +269,9 @@ export default function CourseForm({
             <FormItem>
               <FormLabel>Full Content / Syllabus *</FormLabel>
               <FormControl>
-                <textarea
-                  {...field}
-                  className="border-input placeholder:text-muted-foreground focus-visible:ring-ring h-64 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder="Detailed explanation of the course..."
-                />
+                <div className="border-input focus-visible:ring-ring min-h-[200px] rounded-md border bg-transparent text-sm shadow-sm focus-visible:ring-1 focus-visible:outline-none">
+                  <div ref={editorRef} />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -1,20 +1,38 @@
 'use client'
 
-import { useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import CourseHeader from '@/components/core/dashboard/CourseHeader'
 import CourseTabs from '@/components/core/dashboard/CourseTabs'
-import CourseContent from '@/components/core/dashboard/CourseContent'
 import { useGetCourseById } from '@/hooks/course.hook'
 import { useParams, useRouter } from 'next/navigation'
 
-const tabs = ['Overview', 'Modules', 'Quiz', 'Schedule', 'Participants']
+const tabs = [
+  {
+    label: 'Overview',
+    path: '',
+  },
+  {
+    label: 'Modules',
+    path: 'module',
+  },
+  {
+    label: 'Quiz',
+    path: 'quiz',
+  },
+  {
+    label: 'Schedule',
+    path: 'schedule',
+  },
+  {
+    label: 'Participants',
+    path: 'participant',
+  },
+]
 
-export default function Course() {
+export default function DashboardCourseLayout({ children }) {
   const router = useRouter()
   const params = useParams()
   const courseId = params.courseId
-  const [activeTab, setActiveTab] = useState('All')
   const { course, isLoading, isPending } = useGetCourseById({
     courseId: courseId,
   })
@@ -22,7 +40,7 @@ export default function Course() {
   if (isLoading || isPending) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p>Loading course details...</p>
+        <p>Loading...</p>
       </div>
     )
   }
@@ -49,14 +67,10 @@ export default function Course() {
         <CourseHeader course={course} />
 
         {/* Tabs Navigation */}
-        <CourseTabs
-          tabs={tabs}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-        />
+        <CourseTabs tabs={tabs} courseId={courseId} />
 
         {/* Content Area */}
-        <CourseContent activeTab={activeTab} course={course} />
+        <div className="py-8">{children}</div>
       </main>
     </div>
   )

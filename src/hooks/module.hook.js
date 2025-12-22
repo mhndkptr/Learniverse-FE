@@ -1,10 +1,42 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   createModuleAction,
   deleteModuleAction,
+  getAllModuleAction,
   updateModuleAction,
 } from '@/actions/module.action'
+import { useMemo } from 'react'
+
+export function useGetAllModule({ params }) {
+  const { data, isLoading, isPending, refetch } = useQuery({
+    queryKey: ['getAllModule', params],
+    queryFn: () => getAllModuleAction({ params }),
+    retry: false,
+    staleTime: 300000, // 5 menit
+    cacheTime: Infinity, // Cache tidak akan dihapus
+    refetchOnMount: true, // Tidak refetch saat komponen di-mount ulang
+    refetchOnWindowFocus: false, // Tidak refetch saat fokus kembali ke tab
+    onError: (error) => {
+      toast.error('Something went wrong!', {
+        description: error.message
+          ? error.message
+          : 'Unexpected error occurred!',
+      })
+    },
+  })
+
+  const modules = useMemo(() => {
+    return data?.code === 200 ? data.data : []
+  }, [data])
+
+  return {
+    modules,
+    isLoading,
+    isPending,
+    refetch,
+  }
+}
 
 export function useAddModuleMutation({ successAction }) {
   const addModuleMutation = useMutation({

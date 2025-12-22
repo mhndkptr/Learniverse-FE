@@ -9,8 +9,39 @@ import {
   updateQuizQuestionAction,
   deleteQuizQuestionAction,
   getAllActiveQuizAction,
+  getAllQuizAction,
 } from '@/actions/quiz.action'
 import { useMemo } from 'react'
+
+export function useGetAllQuiz({ params }) {
+  const { data, isLoading, isPending, refetch } = useQuery({
+    queryKey: ['getAllQuiz', params],
+    queryFn: () => getAllQuizAction({ params }),
+    retry: false,
+    staleTime: 300000, // 5 menit
+    cacheTime: Infinity, // Cache tidak akan dihapus
+    refetchOnMount: true, // Tidak refetch saat komponen di-mount ulang
+    refetchOnWindowFocus: false, // Tidak refetch saat fokus kembali ke tab
+    onError: (error) => {
+      toast.error('Something went wrong!', {
+        description: error.message
+          ? error.message
+          : 'Unexpected error occurred!',
+      })
+    },
+  })
+
+  const quizzes = useMemo(() => {
+    return data?.code === 200 ? data.data : []
+  }, [data])
+
+  return {
+    quizzes,
+    isLoading,
+    isPending,
+    refetch,
+  }
+}
 
 export function useGetAllActiveQuiz() {
   const { data, isLoading, isPending, refetch } = useQuery({

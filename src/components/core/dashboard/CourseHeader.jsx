@@ -1,6 +1,6 @@
 export default function CourseHeader({ course }) {
   return (
-    <div className="relative mt-6 h-64 overflow-hidden rounded-2xl bg-linear-to-br from-green-700 to-black">
+    <div className="relative mt-6 h-80 min-h-min overflow-hidden rounded-2xl bg-linear-to-br from-green-700 to-black">
       {/* Background Image Overlay */}
       <div
         className="absolute inset-0"

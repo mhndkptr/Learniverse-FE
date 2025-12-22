@@ -70,7 +70,7 @@ export default function DashboardCourseLayout({ children }) {
         <CourseTabs tabs={tabs} courseId={courseId} />
 
         {/* Content Area */}
-        <div className="py-8">{children}</div>
+        <div className="py-4 md:py-6">{children}</div>
       </main>
     </div>
   )

@@ -44,7 +44,7 @@ export default function ModulesPage() {
 
       {/* List Items Section */}
       <div className="space-y-4">
-        <h2 className="text-foreground text-lg font-semibold">All Modules</h2>
+        <h2 className="text-foreground text-2xl font-bold">All Modules</h2>
         {isLoading || isPending ? (
           <p>Loading...</p>
         ) : (

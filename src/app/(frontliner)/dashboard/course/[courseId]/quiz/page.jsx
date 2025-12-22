@@ -1,46 +1,33 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import QuizHeader from "@/components/core/quiz/QuizHeader"
-import QuizCard from "@/components/core/quiz/QuizCard"
-import StartAttemptModal from "@/components/core/quiz/StartAttemptModal"
-
-const quizData = [
-  {
-    id: 1,
-    title: "Calculus",
-    date: "20 November 2025",
-    grades: "-",
-    description:
-      "Lorem ipsum dolor amet, consectetur adipiscing elit. Tempus bibendum nisl duis mauris mauris consulte.",
-    status: "not-yet",
-    buttonText: "Attempt",
-  },
-  {
-    id: 2,
-    title: "Calculus",
-    date: "10 November 2025",
-    grades: "90",
-    description:
-      "Lorem ipsum dolor amet, consectetur adipiscing elit. Tempus bibendum nisl duis mauris mauris consulte.",
-    status: "completed",
-    buttonText: "Review",
-  },
-  {
-    id: 3,
-    title: "Calculus",
-    date: "10 November 2025",
-    grades: "90",
-    description:
-      "Lorem ipsum dolor amet, consectetur adipiscing elit. Tempus bibendum nisl duis mauris mauris consulte.",
-    status: "completed",
-    buttonText: "Review",
-  },
-]
+import { useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import QuizHeader from '@/components/core/quiz/QuizHeader'
+import QuizCard from '@/components/core/quiz/QuizCard'
+import StartAttemptModal from '@/components/core/quiz/StartAttemptModal'
+import { useGetAllQuiz } from '@/hooks/quiz.hook'
+import { formatDate } from '@/utils/helper'
 
 export default function QuizPage() {
+  const params = useParams()
+  const courseId = params.courseId
   const router = useRouter()
+
+  const { quizzes, isLoading, isPending } = useGetAllQuiz({
+    params: {
+      get_all: true,
+      order_by: [
+        {
+          field: 'start_date',
+          direction: 'asc',
+        },
+      ],
+      filter: {
+        status: 'PUBLISH',
+        course_id: courseId,
+      },
+    },
+  })
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedQuiz, setSelectedQuiz] = useState(null)
 
@@ -58,9 +45,9 @@ export default function QuizPage() {
   // 3. Handler Konfirmasi di Modal (Mulai Kuis)
   const handleConfirmAttempt = () => {
     if (selectedQuiz) {
-      console.log("[Route] Starting attempt for ID:", selectedQuiz.id)
+      console.log('[Route] Starting attempt for ID:', selectedQuiz.id)
       setIsModalOpen(false)
-      
+
       // Navigasi ke: /dashboard/course/quiz/[id]/attempt
       router.push(`/dashboard/course/quiz/${selectedQuiz.id}/attempt`)
     }
@@ -72,36 +59,32 @@ export default function QuizPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <QuizHeader />
+    <div className="flex w-full flex-col space-y-4">
+      <QuizHeader />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {quizData.map((quiz) => (
-            <QuizCard
-              key={quiz.id}
-              // Penting: Passing object quiz agar bisa dikirim balik oleh child component
-              quiz={quiz} 
-              title={quiz.title}
-              date={quiz.date}
-              grades={quiz.grades}
-              description={quiz.description}
-              status={quiz.status}
-              buttonText={quiz.buttonText}
-              // Passing handlers
-              onAttemptClick={handleAttemptClick}
-              onReviewClick={handleReviewClick}
-            />
-          ))}
-        </div>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {quizzes.map((quiz) => (
+          <QuizCard
+            key={quiz.id}
+            quiz={quiz}
+            title={quiz.title}
+            date={`${formatDate(quiz.start_date)} - ${formatDate(quiz.end_date)}`}
+            grades={quiz.grades || '-'}
+            description={quiz.description}
+            status={quiz.status || 'not-yet'}
+            buttonText={quiz.buttonText || 'Attempt'}
+            // Passing handlers
+            onAttemptClick={handleAttemptClick}
+            onReviewClick={handleReviewClick}
+          />
+        ))}
       </div>
 
       <StartAttemptModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onConfirm={handleConfirmAttempt}
-        // Mengambil title dari state object selectedQuiz
-        quizTitle={selectedQuiz?.title || ""}
+        quizTitle={selectedQuiz?.title || ''}
       />
     </div>
   )

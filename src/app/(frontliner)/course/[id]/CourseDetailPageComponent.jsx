@@ -19,16 +19,13 @@ export default function CourseDetailPageComponent({ id }) {
 
   // --- LOGIC PENGECEKAN STATUS ---
 
-  // 1. Cek User Login & Enrollment
   const isEnrolled = course?.course_enrollments?.some(
     (enrollment) => enrollment.user_id === user?.id
   )
 
-  // 2. Cek Status Pendaftaran Course
   const isStudentRegistrationOpen = course?.is_open_registration_member
   const isMentorRegistrationOpen = course?.is_open_registration_mentor
 
-  // 3. Tentukan Teks & Style Tombol
   let enrollButtonText = 'Enroll Now'
   let isButtonDisabled = false
   let buttonIcon = null
@@ -187,7 +184,9 @@ export default function CourseDetailPageComponent({ id }) {
                   <div className="mt-3">
                     <Button
                       className="w-full bg-blue-900 text-white hover:bg-blue-700"
-                      onClick={() => (window.location.href = '/dashboard/course')}
+                      onClick={() =>
+                        (window.location.href = `/dashboard/course/${id}`)
+                      }
                     >
                       Go to Course
                     </Button>
@@ -220,7 +219,6 @@ export default function CourseDetailPageComponent({ id }) {
                         )
                       })
                       .map((mentorItem, index) => {
-                        // Gunakan user.id untuk detail mentor (halaman mentor/[id] menerima user_id)
                         const preparedMentorData = {
                           id: mentorItem.user?.id,
                           user: {

@@ -5,6 +5,8 @@ import CourseHeader from '@/components/core/dashboard/CourseHeader'
 import CourseTabs from '@/components/core/dashboard/CourseTabs'
 import { useGetCourseById } from '@/hooks/course.hook'
 import { useParams, useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/auth.context'
+import { Button } from '@/components/ui/button'
 
 const tabs = [
   {
@@ -33,14 +35,50 @@ export default function DashboardCourseLayout({ children }) {
   const router = useRouter()
   const params = useParams()
   const courseId = params.courseId
+  const { user, isAuthLoading } = useAuth()
   const { course, isLoading, isPending } = useGetCourseById({
     courseId: courseId,
   })
 
-  if (isLoading || isPending) {
+  if (isLoading || isPending || isAuthLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <p>Loading...</p>
+      </div>
+    )
+  }
+
+  const isEnrolled = course?.course_enrollments?.some(
+    (enrollment) => enrollment.user_id === user?.id
+  )
+  const isMentor = course?.mentors?.some(
+    (mentor) =>
+      (mentor.user?.id === user?.id || mentor.user_id === user?.id) &&
+      mentor.status === 'ACCEPTED'
+  )
+  const canAccess = user?.role === 'ADMIN' || Boolean(isEnrolled || isMentor)
+
+  if (!canAccess) {
+    return (
+      <div className="flex h-full items-center justify-center px-6 py-24">
+        <div className="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-8 text-center shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-900">Akses ditolak</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Anda hanya bisa mengakses dashboard course jika sudah terdaftar pada
+            course ini.
+          </p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <Button variant="outline" onClick={() => router.back()}>
+              Kembali
+            </Button>
+            <Button
+              className="bg-[#0E1B50] text-white hover:bg-blue-900"
+              onClick={() => (window.location.href = '/course')}
+            >
+              Lihat Course Lainnya
+            </Button>
+          </div>
+        </div>
       </div>
     )
   }

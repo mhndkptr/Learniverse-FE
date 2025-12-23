@@ -4,13 +4,19 @@ import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 export default function CalendarSchedule({
-  year: initialYear = 2025,
-  month: initialMonth = 10,
+  year: initialYear,
+  month: initialMonth,
   eventsByDate = {},
   onDayClick,
 }) {
+  const now = new Date()
+  const resolvedYear =
+    typeof initialYear === 'number' ? initialYear : now.getFullYear()
+  const resolvedMonth =
+    typeof initialMonth === 'number' ? initialMonth : now.getMonth() + 1
+
   const [currentDate, setCurrentDate] = useState(
-    new Date(initialYear, initialMonth, 1)
+    () => new Date(resolvedYear, resolvedMonth - 1, 1)
   )
 
   const days = [

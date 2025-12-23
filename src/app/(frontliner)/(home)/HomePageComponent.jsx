@@ -127,7 +127,7 @@ export default function HomePageComponent() {
                     <div className="shrink-0">
                       <Image
                         src={
-                          course.image ||
+                          course.cover_uri ||
                           '/assets/images/img-image-placeholder.png'
                         }
                         alt={course?.title}

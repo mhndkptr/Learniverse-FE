@@ -22,10 +22,9 @@ import { useAuth } from '@/contexts/auth.context'
 import { ChevronDown } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 export default function AppHeader() {
-  const router = useRouter()
   const pathname = usePathname()
   const { user, logout } = useAuth()
 
@@ -50,29 +49,32 @@ export default function AppHeader() {
             <div className="hidden w-full md:block md:w-auto">
               <ul className="mt-4 flex flex-col rounded-lg border border-gray-100 bg-gray-50 p-4 font-medium md:mt-0 md:flex-row md:space-x-14 md:border-0 md:bg-white md:p-0 rtl:space-x-reverse dark:border-gray-700 dark:bg-gray-800 md:dark:bg-gray-900">
                 <li>
-                  <p
-                    onClick={() => router.push('/')}
-                    className={`block cursor-pointer rounded-sm ${pathname === '/' ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100 md:border-0 md:p-0 md:hover:bg-transparent md:hover:text-neutral-500`}
-                    aria-current="page"
-                  >
-                    Home
-                  </p>
+                  <Link href="/">
+                    <p
+                      className={`block cursor-pointer rounded-sm ${pathname === '/' ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100 md:border-0 md:p-0 md:hover:bg-transparent md:hover:text-neutral-500`}
+                      aria-current="page"
+                    >
+                      Home
+                    </p>
+                  </Link>
                 </li>
                 <li>
-                  <p
-                    onClick={() => router.push('/course')}
-                    className={`block cursor-pointer rounded-sm ${pathname === '/course' ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100 md:border-0 md:p-0 md:hover:bg-transparent md:hover:text-neutral-500`}
-                  >
-                    Courses
-                  </p>
+                  <Link href="/course">
+                    <p
+                      className={`block cursor-pointer rounded-sm ${pathname === '/course' ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100 md:border-0 md:p-0 md:hover:bg-transparent md:hover:text-neutral-500`}
+                    >
+                      Courses
+                    </p>
+                  </Link>
                 </li>
                 <li>
-                  <p
-                    onClick={() => router.push('/mentor')}
-                    className={`block cursor-pointer rounded-sm ${pathname === '/mentor' ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100 md:border-0 md:p-0 md:hover:bg-transparent md:hover:text-neutral-500`}
-                  >
-                    Mentors
-                  </p>
+                  <Link href="/mentor">
+                    <p
+                      className={`block cursor-pointer rounded-sm ${pathname === '/mentor' ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100 md:border-0 md:p-0 md:hover:bg-transparent md:hover:text-neutral-500`}
+                    >
+                      Mentors
+                    </p>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -91,27 +93,22 @@ export default function AppHeader() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-fit" align="start">
-                    <DropdownMenuItem
-                      className={'cursor-pointer'}
-                      onClick={() => router.push('/')}
-                    >
-                      Client Area
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className={'cursor-pointer'}
-                      onClick={() => router.push('/backoffice')}
-                    >
-                      Backoffice Area
-                    </DropdownMenuItem>
+                    <Link href="/">
+                      <DropdownMenuItem className={'cursor-pointer'}>
+                        Client Area
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href="/backoffice">
+                      <DropdownMenuItem className={'cursor-pointer'}>
+                        Backoffice Area
+                      </DropdownMenuItem>
+                    </Link>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button
-                  variant="primary"
-                  onClick={() => router.push('/dashboard')}
-                >
-                  Dashboard
-                </Button>
+                <Link href="/dashboard">
+                  <Button variant="primary">Dashboard</Button>
+                </Link>
               )}
 
               <DropdownMenu>
@@ -131,24 +128,21 @@ export default function AppHeader() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-fit" align="start">
-                  <DropdownMenuItem
-                    onClick={() => router.push('/my/profile')}
-                    className={'cursor-pointer'}
-                  >
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => router.push('/my/history/order')}
-                    className={'cursor-pointer'}
-                  >
-                    Order History
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => router.push('/my/history/mentor')}
-                    className={'cursor-pointer'}
-                  >
-                    Mentor History
-                  </DropdownMenuItem>
+                  <Link href="/my/profile">
+                    <DropdownMenuItem className={'cursor-pointer'}>
+                      Profile
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/my/history/order">
+                    <DropdownMenuItem className={'cursor-pointer'}>
+                      Order History
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/my/history/mentor">
+                    <DropdownMenuItem className={'cursor-pointer'}>
+                      Mentor History
+                    </DropdownMenuItem>
+                  </Link>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={async () => await logout()}
@@ -161,20 +155,16 @@ export default function AppHeader() {
             </div>
           ) : (
             <div className="space-x-3">
-              <Button
-                onClick={() => router.push('/auth/register')}
-                variant="secondary"
-                className="hidden md:inline-block"
-              >
-                Register
-              </Button>
-              <Button
-                onClick={() => router.push('/auth/login')}
-                variant="primary"
-                className="hidden md:inline-block"
-              >
-                Login
-              </Button>
+              <Link href="/auth/register">
+                <Button variant="secondary" className="hidden md:inline-block">
+                  Register
+                </Button>
+              </Link>
+              <Link href="/auth/login">
+                <Button variant="primary" className="hidden md:inline-block">
+                  Login
+                </Button>
+              </Link>
             </div>
           )}
 
@@ -217,29 +207,32 @@ export default function AppHeader() {
 
                 <ul className="flex flex-col space-y-2 rounded-lg px-4 font-medium rtl:space-x-reverse">
                   <li>
-                    <p
-                      onClick={() => router.push('/')}
-                      className={`block cursor-pointer rounded-sm ${pathname === '/' ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100`}
-                      aria-current="page"
-                    >
-                      Home
-                    </p>
+                    <Link href="/">
+                      <p
+                        className={`block cursor-pointer rounded-sm ${pathname === '/' ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100`}
+                        aria-current="page"
+                      >
+                        Home
+                      </p>
+                    </Link>
                   </li>
                   <li>
-                    <p
-                      onClick={() => router.push('/course')}
-                      className={`block cursor-pointer rounded-sm ${pathname === '/course' ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100`}
-                    >
-                      Courses
-                    </p>
+                    <Link href="/course">
+                      <p
+                        className={`block cursor-pointer rounded-sm ${pathname === '/course' ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100`}
+                      >
+                        Courses
+                      </p>
+                    </Link>
                   </li>
                   <li>
-                    <p
-                      onClick={() => router.push('/mentor')}
-                      className={`block cursor-pointer rounded-sm ${pathname === '/mentor' ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100`}
-                    >
-                      Mentors
-                    </p>
+                    <Link href="/mentor">
+                      <p
+                        className={`block cursor-pointer rounded-sm ${pathname === '/mentor' ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100`}
+                      >
+                        Mentors
+                      </p>
+                    </Link>
                   </li>
                 </ul>
 
@@ -249,29 +242,32 @@ export default function AppHeader() {
 
                     <ul className="flex flex-col space-y-2 rounded-lg px-4 font-medium rtl:space-x-reverse">
                       <li>
-                        <p
-                          onClick={() => router.push('/my/profile')}
-                          className={`block cursor-pointer rounded-sm ${pathname.startsWith('/my/profile') ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100`}
-                          aria-current="page"
-                        >
-                          Profile
-                        </p>
+                        <Link href="/my/profile">
+                          <p
+                            className={`block cursor-pointer rounded-sm ${pathname.startsWith('/my/profile') ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100`}
+                            aria-current="page"
+                          >
+                            Profile
+                          </p>
+                        </Link>
                       </li>
                       <li>
-                        <p
-                          onClick={() => router.push('/my/history/order')}
-                          className={`block cursor-pointer rounded-sm ${pathname.startsWith('/my/history/order') ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100`}
-                        >
-                          Order History
-                        </p>
+                        <Link href="/my/history/order">
+                          <p
+                            className={`block cursor-pointer rounded-sm ${pathname.startsWith('/my/history/order') ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100`}
+                          >
+                            Order History
+                          </p>
+                        </Link>
                       </li>
                       <li>
-                        <p
-                          onClick={() => router.push('/my/history/mentor')}
-                          className={`block cursor-pointer rounded-sm ${pathname.startsWith('/my/history/mentor') ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100`}
-                        >
-                          Mentor History
-                        </p>
+                        <Link href="/my/history/mentor">
+                          <p
+                            className={`block cursor-pointer rounded-sm ${pathname.startsWith('/my/history/mentor') ? 'font-bold text-neutral-500' : 'text-gray-900'} px-3 py-2 hover:bg-gray-100`}
+                          >
+                            Mentor History
+                          </p>
+                        </Link>
                       </li>
                     </ul>
 
@@ -282,29 +278,23 @@ export default function AppHeader() {
                 {user && (
                   <div className="flex flex-col space-y-2 rounded-lg px-4 font-medium">
                     {user.role === 'STUDENT' ? (
-                      <Button
-                        onClick={() => router.push('/dashboard')}
-                        variant="primary"
-                        className={'text-left'}
-                      >
-                        <span className="w-full">Dashboard</span>
-                      </Button>
+                      <Link href="/dashboard">
+                        <Button variant="primary" className={'text-left'}>
+                          <span className="w-full">Dashboard</span>
+                        </Button>
+                      </Link>
                     ) : (
                       <>
-                        <Button
-                          onClick={() => router.push('/')}
-                          variant="primary"
-                          className={'text-left'}
-                        >
-                          <span className="w-full">Client Area</span>
-                        </Button>
-                        <Button
-                          onClick={() => router.push('/backoffice')}
-                          variant="secondary"
-                          className={'text-left'}
-                        >
-                          <span className="w-full">Backoffice Area</span>
-                        </Button>
+                        <Link href={'/'}>
+                          <Button variant="primary" className={'text-left'}>
+                            <span className="w-full">Client Area</span>
+                          </Button>
+                        </Link>
+                        <Link href={'/backoffice'}>
+                          <Button variant="secondary" className={'text-left'}>
+                            <span className="w-full">Backoffice Area</span>
+                          </Button>
+                        </Link>
                       </>
                     )}
                   </div>
@@ -323,20 +313,14 @@ export default function AppHeader() {
                   ) : (
                     <>
                       <SheetClose asChild>
-                        <Button
-                          onClick={() => router.push('/auth/login')}
-                          variant="primary"
-                        >
-                          Login
-                        </Button>
+                        <Link href="/auth/login">
+                          <Button variant="primary">Login</Button>
+                        </Link>
                       </SheetClose>
                       <SheetClose asChild>
-                        <Button
-                          onClick={() => router.push('/auth/register')}
-                          variant="secondary"
-                        >
-                          Register
-                        </Button>
+                        <Link href="/auth/register">
+                          <Button variant="secondary">Register</Button>
+                        </Link>
                       </SheetClose>
                     </>
                   )}

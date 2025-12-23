@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useBackofficeBreadcrumb } from '@/contexts/backoffice-breadcrumb.context'
+import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 
@@ -118,16 +119,16 @@ export default function BackofficeModuleEditPage() {
   }
 
   if (!hasLoaded) {
-    return <div className="p-4 text-sm text-muted-foreground">Loading...</div>
+    return <div className="text-muted-foreground p-4 text-sm">Loading...</div>
   }
 
   if (notFound) {
     return (
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-bold">Module not found</h1>
-        <Button variant="outline" onClick={() => router.push('/backoffice/module')}>
-          Back to Module
-        </Button>
+        <Link href="/backoffice/module">
+          <Button variant="outline">Back to Module</Button>
+        </Link>
       </div>
     )
   }
@@ -136,10 +137,10 @@ export default function BackofficeModuleEditPage() {
     <div className="flex flex-col gap-6">
       <div className="space-y-1">
         <h1 className="text-2xl font-bold">{pageTitle}</h1>
-        <p className="text-sm text-muted-foreground">Edit Module Form</p>
+        <p className="text-muted-foreground text-sm">Edit Module Form</p>
       </div>
 
-      <div className="rounded-lg border bg-card p-6 shadow-sm">
+      <div className="bg-card rounded-lg border p-6 shadow-sm">
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <Label htmlFor="module-title">Title</Label>
@@ -166,7 +167,7 @@ export default function BackofficeModuleEditPage() {
                 }))
               }
               placeholder="Enter module description"
-              className="min-h-[160px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="border-input focus-visible:ring-ring min-h-[160px] w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             />
           </div>
 
@@ -182,27 +183,24 @@ export default function BackofficeModuleEditPage() {
                   file: e.target.files?.[0] || null,
                 }))
               }
-              className="block w-full text-sm file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-muted file:px-4 file:py-2 file:text-sm file:font-medium file:text-foreground"
+              className="file:bg-muted file:text-foreground block w-full text-sm file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:px-4 file:py-2 file:text-sm file:font-medium"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Upload a file (PDF, DOCX, etc.) for this module. Max size: 10MB
             </p>
             {(formValues.file || formValues.filename) && (
-              <p className="text-xs text-foreground">
+              <p className="text-foreground text-xs">
                 Selected file: {formValues.file?.name || formValues.filename}
               </p>
             )}
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push('/backoffice/module')}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
+            <Link href="/backoffice/module">
+              <Button type="button" variant="outline" disabled={isSubmitting}>
+                Cancel
+              </Button>
+            </Link>
             <Button
               type="submit"
               variant="primary"
@@ -217,4 +215,3 @@ export default function BackofficeModuleEditPage() {
     </div>
   )
 }
-

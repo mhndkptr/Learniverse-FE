@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { useGetAllEnrolledCourse } from '@/hooks/course.hook'
 import { ArrowUpRight } from 'lucide-react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 export default function ContinueLearning() {
@@ -38,13 +39,11 @@ export default function ContinueLearning() {
             <div className="flex-1">
               <h3 className="text-foreground mb-1 font-bold">{course.title}</h3>
               <p className="mb-3 text-sm text-gray-600">{course.description}</p>
-              <Button
-                onClick={() => router.push(`/dashboard/course/${course.id}`)}
-                variant="secondary"
-                size="sm"
-              >
-                Continue Learning <ArrowUpRight size={14} />
-              </Button>
+              <Link href={`/dashboard/course/${course.id}`}>
+                <Button variant="secondary" size="sm">
+                  Continue Learning <ArrowUpRight size={14} />
+                </Button>
+              </Link>
             </div>
           </div>
         ))}

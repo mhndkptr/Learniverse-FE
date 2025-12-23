@@ -39,6 +39,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react'
+import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -307,13 +308,11 @@ export default function EditQuizPage() {
       {/* HEADER */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push(`/backoffice/course/${courseId}/manage`)}
-          >
-            <ArrowLeft className="size-5" />
-          </Button>
+          <Link href={`/backoffice/course/${courseId}/manage`}>
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="size-5" />
+            </Button>
+          </Link>
           <h1 className="text-2xl font-bold">Edit Quiz</h1>
         </div>
 

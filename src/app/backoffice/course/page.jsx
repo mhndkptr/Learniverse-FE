@@ -16,6 +16,7 @@ import { formatCurrency } from '@/utils/helper'
 import PaginationControls from '@/components/layout/pagination/PaginationControls'
 import ConfirmDialogDelete from '@/components/core/backoffice/course/ConfirmDialogDelete'
 import { Card, CardContent } from '@/components/ui/card'
+import Link from 'next/link'
 
 export default function BackofficeCoursePage() {
   const router = useRouter()
@@ -141,13 +142,14 @@ export default function BackofficeCoursePage() {
           </div>
         </div>
 
-        <Button
-          size="sm"
-          className="h-9 bg-[#0E1B50] text-white shadow-sm hover:bg-blue-900"
-          onClick={() => router.push('/backoffice/course/create')}
-        >
-          <Plus className="mr-2 size-4" /> Add Course
-        </Button>
+        <Link href="/backoffice/course/create">
+          <Button
+            size="sm"
+            className="h-9 bg-[#0E1B50] text-white shadow-sm hover:bg-blue-900"
+          >
+            <Plus className="mr-2 size-4" /> Add Course
+          </Button>
+        </Link>
       </div>
 
       {/* CONTENT AREA */}

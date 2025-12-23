@@ -63,21 +63,27 @@ export default function QuizPage() {
       <QuizHeader />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {quizzes.map((quiz) => (
-          <QuizCard
-            key={quiz.id}
-            quiz={quiz}
-            title={quiz.title}
-            date={`${formatDate(quiz.start_date)} - ${formatDate(quiz.end_date)}`}
-            grades={quiz.grades || '-'}
-            description={quiz.description}
-            status={quiz.status || 'not-yet'}
-            buttonText={quiz.buttonText || 'Attempt'}
-            // Passing handlers
-            onAttemptClick={handleAttemptClick}
-            onReviewClick={handleReviewClick}
-          />
-        ))}
+        {isLoading || isPending ? (
+          <p>Loading quizzes...</p>
+        ) : quizzes.length === 0 ? (
+          <p>No quizzes available.</p>
+        ) : (
+          quizzes.map((quiz) => (
+            <QuizCard
+              key={quiz.id}
+              quiz={quiz}
+              title={quiz.title}
+              date={`${formatDate(quiz.start_date)} - ${formatDate(quiz.end_date)}`}
+              grades={quiz.grades || '-'}
+              description={quiz.description}
+              status={quiz.status || 'not-yet'}
+              buttonText={quiz.buttonText || 'Attempt'}
+              // Passing handlers
+              onAttemptClick={handleAttemptClick}
+              onReviewClick={handleReviewClick}
+            />
+          ))
+        )}
       </div>
 
       <StartAttemptModal

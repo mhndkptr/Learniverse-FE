@@ -85,13 +85,11 @@ export default function MentorDetailPageComponent({ mentorId }) {
           Profil mentor tidak ditemukan atau mentor ini tidak aktif di kursus
           manapun.
         </p>
-        <Button
-          onClick={() => router.push('/mentor')}
-          variant="link"
-          className="mt-2"
-        >
-          Go Back to Mentors List
-        </Button>
+        <Link href="/mentor">
+          <Button variant="link" className="mt-2">
+            Go Back to Mentors List
+          </Button>
+        </Link>
       </div>
     )
   }

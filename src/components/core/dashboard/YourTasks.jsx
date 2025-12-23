@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { useGetAllActiveQuiz } from '@/hooks/quiz.hook'
 import { ArrowUpRight, CalendarClock } from 'lucide-react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 // Helper format tanggal: "29 December 2025"
@@ -86,17 +87,13 @@ export default function YourTasks() {
                       {task.course?.title}
                     </p>
 
-                    <Button
-                      onClick={() =>
-                        router.push(
-                          `/dashboard/course/${task.course?.id}/quiz/${task.id}/attempt`
-                        )
-                      }
-                      variant="secondary"
-                      size="sm"
+                    <Link
+                      href={`/dashboard/course/${task.course?.id}/quiz/${task.id}/attempt`}
                     >
-                      Attempt Now <ArrowUpRight size={12} />
-                    </Button>
+                      <Button variant="secondary" size="sm">
+                        Attempt Now <ArrowUpRight size={12} />
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               ))}

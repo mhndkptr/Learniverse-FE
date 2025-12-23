@@ -21,6 +21,7 @@ import { useBackofficeBreadcrumb } from '@/contexts/backoffice-breadcrumb.contex
 import { useAddQuizMutation } from '@/hooks/quiz.hook'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
@@ -108,13 +109,11 @@ export default function CreateQuizPage() {
   return (
     <div className="w-full">
       <div className="mb-6 flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.push(`/backoffice/course/${courseId}/manage`)}
-        >
-          <ArrowLeft className="size-5" />
-        </Button>
+        <Link href={`/backoffice/course/${courseId}/manage`}>
+          <Button variant="ghost" size="icon">
+            <ArrowLeft className="size-5" />
+          </Button>
+        </Link>
         <h1 className="text-2xl font-bold">Create Quiz</h1>
       </div>
 

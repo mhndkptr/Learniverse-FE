@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { useGetAllCourse } from '@/hooks/course.hook'
 import { ExternalLink, Search, Star } from 'lucide-react'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 const faqs = [
   {
@@ -58,7 +58,6 @@ const testimonials = [
 ]
 
 export default function HomePageComponent() {
-  const router = useRouter()
   const { courses } = useGetAllCourse({
     params: {
       pagination: {
@@ -146,15 +145,16 @@ export default function HomePageComponent() {
                       <p className="text-muted-foreground mb-3 flex-1 text-sm">
                         {course?.description}
                       </p>
-                      <Button
-                        onClick={() => router.push(`/course/${course.id}`)}
-                        variant="secondary"
-                        type="button"
-                        className="w-fit"
-                      >
-                        See Detail
-                        <ExternalLink size={16} className="ml-1" />
-                      </Button>
+                      <Link href={`/course/${course.id}`}>
+                        <Button
+                          variant="secondary"
+                          type="button"
+                          className="w-fit"
+                        >
+                          See Detail
+                          <ExternalLink size={16} className="ml-1" />
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -163,15 +163,16 @@ export default function HomePageComponent() {
 
             {/* See More Button */}
             <div className="flex justify-center">
-              <Button
-                onClick={() => router.push('/course')}
-                variant="secondary"
-                size="lg"
-                className="w-fit"
-                type="button"
-              >
-                See More
-              </Button>
+              <Link href="/course">
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="w-fit"
+                  type="button"
+                >
+                  See More
+                </Button>
+              </Link>
             </div>
           </div>
         </section>
@@ -201,15 +202,12 @@ export default function HomePageComponent() {
                   join our community of educators. Share your expertise, connect
                   with eager learners, and make a real impact on their lives.
                 </p>
-                <Button
-                  variant="secondary"
-                  onClick={() => router.push('/mentor/registration')}
-                  size={'lg'}
-                  className="w-fit"
-                >
-                  Become Mentor
-                  <ExternalLink size={16} className="ml-2" />
-                </Button>
+                <Link href="/mentor/registration">
+                  <Button variant="secondary" size={'lg'} className="w-fit">
+                    Become Mentor
+                    <ExternalLink size={16} className="ml-2" />
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

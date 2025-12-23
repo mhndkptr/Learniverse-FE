@@ -45,6 +45,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import BaseTable from '@/components/_shared/BaseTable'
 import { Badge } from '@/components/ui/badge'
+import Link from 'next/link'
 
 // API Helper Delete Mentor
 const deleteMentorAction = async (id) => {
@@ -382,9 +383,7 @@ export default function CourseManagePageComponent({ id }) {
           const statusLabel = (row.status || 'UNKNOWN').replace('_', ' ')
 
           return (
-            <Badge className={`${colorClass} text-white`}>
-              {statusLabel}
-            </Badge>
+            <Badge className={`${colorClass} text-white`}>{statusLabel}</Badge>
           )
         },
       },
@@ -445,18 +444,15 @@ export default function CourseManagePageComponent({ id }) {
         className: 'w-[100px]',
         render: (row) => (
           <div className="flex gap-2">
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 text-amber-600"
-              onClick={() =>
-                router.push(
-                  `/backoffice/course/${id}/manage/quiz/${row.id}/edit`
-                )
-              }
-            >
-              <Pencil className="size-4" />
-            </Button>
+            <Link href={`/backoffice/course/${id}/manage/quiz/${row.id}/edit`}>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-amber-600"
+              >
+                <Pencil className="size-4" />
+              </Button>
+            </Link>
             <Button
               size="icon"
               variant="ghost"
@@ -552,13 +548,11 @@ export default function CourseManagePageComponent({ id }) {
     <div className="mx-auto w-full max-w-7xl space-y-6 py-10">
       {/* Header */}
       <div className="flex items-center gap-4 border-b pb-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.push(`/backoffice/course`)}
-        >
-          <ArrowLeft className="size-5" />
-        </Button>
+        <Link href={`/backoffice/course`}>
+          <Button variant="ghost" size="icon">
+            <ArrowLeft className="size-5" />
+          </Button>
+        </Link>
         <div>
           <h1 className="text-2xl font-bold">Manage Course</h1>
           <p className="text-muted-foreground text-sm">
@@ -694,15 +688,11 @@ export default function CourseManagePageComponent({ id }) {
                   { value: 'created_at:asc', label: 'Oldest' },
                 ]}
               />
-              <Button
-                size="sm"
-                variant="primary"
-                onClick={() => {
-                  router.push(`/backoffice/course/${id}/manage/quiz/create`)
-                }}
-              >
-                <Plus className="mr-2 size-4" /> Create Quiz
-              </Button>
+              <Link href={`/backoffice/course/${id}/manage/quiz/create`}>
+                <Button size="sm" variant="primary">
+                  <Plus className="mr-2 size-4" /> Create Quiz
+                </Button>
+              </Link>
             </div>
           </div>
           <div className="rounded-lg border bg-white shadow-sm">

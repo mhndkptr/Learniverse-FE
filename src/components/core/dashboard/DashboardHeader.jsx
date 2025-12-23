@@ -2,10 +2,9 @@
 
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/auth.context'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function DashboardHeader() {
-  const router = useRouter()
   const { user } = useAuth()
 
   return (
@@ -15,13 +14,11 @@ export default function DashboardHeader() {
           Welcome Back, {user?.name}!
         </h1>
         <p className="mb-6 text-amber-100">Your Learning Journey Awaits</p>
-        <Button
-          onClick={() => router.push('/mentor/registration')}
-          variant="primary"
-          size="lg"
-        >
-          Enroll New Course
-        </Button>
+        <Link href="/mentor/registration">
+          <Button variant="primary" size="lg">
+            Enroll New Course
+          </Button>
+        </Link>
       </div>
     </div>
   )

@@ -195,7 +195,7 @@ export default function MyHistoryOrderPage() {
                               variant={'primary'}
                               className="flex-1"
                               onClick={() =>
-                                (window.location.href = '/dashboard/course')
+                                (window.location.href = `/dashboard/course/${transaction?.course?.id}`)
                               }
                             >
                               Go to Course

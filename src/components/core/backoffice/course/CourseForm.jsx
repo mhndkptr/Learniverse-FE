@@ -275,10 +275,13 @@ export default function CourseForm({
               <FormControl>
                 <div className="space-y-2">
                   <input type="hidden" {...field} value={field.value || ''} />
-                  <div className="rounded-md border border-input text-sm shadow-sm">
+                  <div className="border-input rounded-md border text-sm shadow-sm">
                     <EditorToolbar editor={editor} />
                     {editor ? (
-                      <EditorContent editor={editor} className="richtext px-3 py-2" />
+                      <EditorContent
+                        editor={editor}
+                        className="richtext px-3 py-2"
+                      />
                     ) : (
                       <div className="flex min-h-[220px] items-center justify-center text-gray-400">
                         Loading editor...

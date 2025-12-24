@@ -32,6 +32,15 @@ export async function getCourseByIdAction({ id }) {
   }
 }
 
+export async function getCourseByIdDashboardAction({ id }) {
+  try {
+    const res = await request.get(`/course/${id}/dashboard`)
+    return res.data
+  } catch (error) {
+    return handleAxiosError(error)
+  }
+}
+
 export async function createCourseTransactionAction({ body }) {
   try {
     const res = await request.post('/course/transaction', body)

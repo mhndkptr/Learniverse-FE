@@ -1,13 +1,13 @@
 'use client'
 
-import { useGetCourseById } from '@/hooks/course.hook'
+import { useGetCourseByIdDashboard } from '@/hooks/course.hook'
 import { useParams } from 'next/navigation'
 
 export default function DashboardCoursePage() {
   const params = useParams()
   const courseId = params.courseId
 
-  const { course, isLoading, isPending } = useGetCourseById({
+  const { course, isLoading, isPending } = useGetCourseByIdDashboard({
     courseId: courseId,
   })
 

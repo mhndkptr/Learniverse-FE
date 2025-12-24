@@ -57,7 +57,7 @@ export default function BackofficeEnrollmentPage() {
       // Kirim filter status jika user memilih selain 'all'
       filter: filterStatus !== 'all' ? { status: filterStatus } : undefined,
       // PENTING: Minta backend untuk menyertakan data User dan Course
-      include_relation: ['user', 'course'],
+      include_relation: ['user', 'course', 'course_transaction'],
       order_by: [{ field: 'created_at', direction: 'desc' }],
     },
   })
@@ -204,8 +204,7 @@ export default function BackofficeEnrollmentPage() {
         key: 'status',
         header: 'Status',
         sortable: false,
-        render: (row) =>
-          getStatusBadge(getEffectiveStatus(row)),
+        render: (row) => getStatusBadge(getEffectiveStatus(row)),
       },
       {
         key: 'amount',
@@ -236,9 +235,13 @@ export default function BackofficeEnrollmentPage() {
 
     switch (sortOption) {
       case 'name_asc':
-        return data.sort((a, b) => getNameValue(a).localeCompare(getNameValue(b)))
+        return data.sort((a, b) =>
+          getNameValue(a).localeCompare(getNameValue(b))
+        )
       case 'name_desc':
-        return data.sort((a, b) => getNameValue(b).localeCompare(getNameValue(a)))
+        return data.sort((a, b) =>
+          getNameValue(b).localeCompare(getNameValue(a))
+        )
       case 'status_asc':
         return data.sort((a, b) =>
           getStatusValue(a).localeCompare(getStatusValue(b))

@@ -108,8 +108,14 @@ export default function BackofficeModulePage() {
     sortConfig.direction,
   ])
 
-  const [showEditModal, setShowEditModal] = useState({ data: null, status: false })
-  const [showDeleteModal, setShowDeleteModal] = useState({ data: null, status: false })
+  const [showEditModal, setShowEditModal] = useState({
+    data: null,
+    status: false,
+  })
+  const [showDeleteModal, setShowDeleteModal] = useState({
+    data: null,
+    status: false,
+  })
   const [deleteLoading, setDeleteLoading] = useState(false)
 
   const { setBreadcrumb } = useBackofficeBreadcrumb()
@@ -232,26 +238,37 @@ export default function BackofficeModulePage() {
 
       {showDeleteModal.status && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-          <div 
+          <div
             className="absolute inset-0 backdrop-blur-sm transition-opacity"
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
             onClick={() => setShowDeleteModal({ data: null, status: false })}
           />
-          <div className="relative z-10 bg-white rounded-xl p-8 max-w-sm w-full mx-4 shadow-2xl animate-in fade-in zoom-in duration-200 text-center">
-            <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-yellow-100 mb-6 border-4 border-white shadow-sm">
+          <div className="animate-in fade-in zoom-in relative z-10 mx-4 w-full max-w-sm rounded-xl bg-white p-8 text-center shadow-2xl duration-200">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-yellow-100 shadow-sm">
               <TriangleAlert className="h-10 w-10 text-yellow-500" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Are You Sure?!</h3>
-            <p className="text-gray-500 text-sm font-medium mb-8">This will be permanently deleted!</p>
+            <h3 className="mb-2 text-2xl font-bold text-gray-900">
+              Are You Sure?!
+            </h3>
+            <p className="mb-8 text-sm font-medium text-gray-500">
+              This will be permanently deleted!
+            </p>
             <div className="flex justify-center gap-4">
               <button
                 onClick={handleDelete}
-                className="px-6 py-2.5 bg-[#9F1239] hover:bg-[#881337] text-white font-semibold rounded-lg shadow-md transition-transform hover:scale-105"
+                className="rounded-lg bg-[#9F1239] px-6 py-2.5 font-semibold text-white shadow-md transition-transform hover:scale-105 hover:bg-[#881337]"
                 disabled={deleteLoading}
               >
                 {deleteLoading ? 'Deleting...' : 'Delete'}
               </button>
-              <button onClick={() => setShowDeleteModal({ data: null, status: false })} className="px-6 py-2.5 bg-[#0F172A] hover:bg-[#1e293b] text-white font-semibold rounded-lg shadow-md transition-transform hover:scale-105">Cancel</button>
+              <button
+                onClick={() =>
+                  setShowDeleteModal({ data: null, status: false })
+                }
+                className="rounded-lg bg-[#0F172A] px-6 py-2.5 font-semibold text-white shadow-md transition-transform hover:scale-105 hover:bg-[#1e293b]"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

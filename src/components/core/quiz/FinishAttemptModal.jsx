@@ -3,36 +3,38 @@ export default function FinishAttemptModal({ isOpen, onClose, onConfirm }) {
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-      <div 
+      <div
         className="absolute inset-0 backdrop-blur-sm"
         style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
         onClick={onClose}
       />
 
-      <div className="relative z-10 bg-white rounded-xl p-8 max-w-lg w-full mx-4 shadow-2xl animate-in fade-in zoom-in duration-200">
-        
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Finish Attempt</h2>
+      <div className="animate-in fade-in zoom-in relative z-10 mx-4 w-full max-w-lg rounded-xl bg-white p-8 shadow-2xl duration-200">
+        <h2 className="mb-6 text-2xl font-bold text-gray-900">
+          Finish Attempt
+        </h2>
 
         <div className="mb-8">
-          <p className="text-gray-600 text-lg leading-relaxed font-medium">
-            You still have time left, are you sure you want to submit this exam now?
+          <p className="text-lg leading-relaxed font-medium text-gray-600">
+            You still have time left, are you sure you want to submit this exam
+            now?
           </p>
         </div>
 
         {/* Buttons */}
-        <div className="flex gap-4 justify-end">
+        <div className="flex justify-end gap-4">
           {/* Tombol Finish (Primary) */}
           <button
             onClick={onConfirm}
-            className="px-6 py-3 bg-amber-700 hover:bg-amber-800 text-white font-semibold rounded-lg transition-colors shadow-sm"
+            className="rounded-lg bg-amber-700 px-6 py-3 font-semibold text-white shadow-sm transition-colors hover:bg-amber-800"
           >
             Finish
           </button>
-          
+
           {/* Tombol Cancel (Secondary) */}
           <button
             onClick={onClose}
-            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors shadow-sm"
+            className="rounded-lg bg-red-600 px-6 py-3 font-semibold text-white shadow-sm transition-colors hover:bg-red-700"
           >
             Cancel
           </button>

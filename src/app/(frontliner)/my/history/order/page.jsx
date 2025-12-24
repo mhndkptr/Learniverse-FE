@@ -194,7 +194,9 @@ export default function MyHistoryOrderPage() {
                             <Button
                               variant={'primary'}
                               className="flex-1"
-                              onClick={() => (window.location.href = '/dashboard/course')}
+                              onClick={() =>
+                                (window.location.href = '/dashboard/course')
+                              }
                             >
                               Go to Course
                               <ArrowRight className="ml-2 h-4 w-4" />

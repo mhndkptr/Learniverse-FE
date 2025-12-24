@@ -228,13 +228,13 @@ export function useDeleteCourseAdminMutation({ onSuccess } = {}) {
   })
 }
 
-export function useGetAllEnrolledCourse() {
+export function useGetAllEnrolledCourse({ userId }) {
   const { data, isLoading, isPending, refetch } = useQuery({
-    queryKey: ['getEnrolledCourses'],
+    queryKey: ['getEnrolledCourses', userId],
     queryFn: () => getAllEnrolledCourseAction(),
     retry: false,
     staleTime: 300000, // 5 menit
-    cacheTime: Infinity, // Cache tidak akan dihapus
+    cacheTime: 300000, // Cache tidak akan dihapus
     refetchOnMount: true, // Tidak refetch saat komponen di-mount ulang
     refetchOnWindowFocus: false, // Tidak refetch saat fokus kembali ke tab
     onError: (error) => {

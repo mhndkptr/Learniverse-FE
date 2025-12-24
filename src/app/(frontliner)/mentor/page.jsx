@@ -17,7 +17,6 @@ export default function MentorPage() {
 
   const { mentors, isLoading, isFetching } = useGetMentors({ params })
 
-  // [REVISI] Logic untuk mengelompokkan mentor berdasarkan user.id
   const groupedMentors = useMemo(() => {
     if (!mentors) return []
 
@@ -28,9 +27,8 @@ export default function MentorPage() {
       const userId = record.user.id
 
       if (!map.has(userId)) {
-        // Menggunakan USER ID sebagai ID utama untuk link/kartu
         map.set(userId, {
-          id: userId, // <--- ID yang dikirim ke URL adalah USER ID
+          id: userId,
           user: record.user,
           bio: record.bio,
           courseTitles: record.course ? [record.course.title] : [],

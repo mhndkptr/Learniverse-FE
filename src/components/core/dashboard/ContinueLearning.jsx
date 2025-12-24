@@ -5,10 +5,14 @@ import { useGetAllEnrolledCourse } from '@/hooks/course.hook'
 import { ArrowUpRight } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/auth.context'
 
 export default function ContinueLearning() {
   const router = useRouter()
-  const { enrolledCourses, isLoading, isPending } = useGetAllEnrolledCourse()
+  const { user } = useAuth()
+  const { enrolledCourses, isLoading, isPending } = useGetAllEnrolledCourse({
+    userId: user?.id,
+  })
 
   if (isLoading || isPending) {
     return <div>Loading...</div>

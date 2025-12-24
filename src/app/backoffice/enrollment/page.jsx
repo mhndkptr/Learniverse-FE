@@ -99,6 +99,13 @@ export default function BackofficeEnrollmentPage() {
   ])
 
   // --- HELPER ---
+  const getEffectiveStatus = (row) => {
+    const transactionStatus = row.course_transaction?.status
+    if (transactionStatus) return transactionStatus
+    if (row.role === 'MENTOR') return 'verified_mentor'
+    return 'unverified'
+  }
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'settlement':
@@ -106,6 +113,12 @@ export default function BackofficeEnrollmentPage() {
         return (
           <Badge className="border-none bg-green-100 text-green-700 hover:bg-green-100">
             Success
+          </Badge>
+        )
+      case 'verified_mentor':
+        return (
+          <Badge className="border-none bg-blue-100 text-blue-700 hover:bg-blue-100">
+            Verified (Mentor)
           </Badge>
         )
       case 'pending':
@@ -129,6 +142,8 @@ export default function BackofficeEnrollmentPage() {
             Expired
           </Badge>
         )
+      case 'unverified':
+        return <Badge variant="outline">Unverified</Badge>
       default:
         return <Badge variant="outline">{status}</Badge>
     }
@@ -190,9 +205,7 @@ export default function BackofficeEnrollmentPage() {
         header: 'Status',
         sortable: false,
         render: (row) =>
-          getStatusBadge(
-            row.course_transaction?.status || row.status || 'unverified'
-          ),
+          getStatusBadge(getEffectiveStatus(row)),
       },
       {
         key: 'amount',
@@ -217,8 +230,7 @@ export default function BackofficeEnrollmentPage() {
 
   const sortedEnrollments = useMemo(() => {
     const data = [...(enrollments || [])]
-    const getStatusValue = (row) =>
-      (row.course_transaction?.status || row.status || 'unverified')?.toString()
+    const getStatusValue = (row) => getEffectiveStatus(row)?.toString()
     const getNameValue = (row) => row.user?.name || ''
     const getCreatedValue = (row) => row.created_at || row.joined_at || ''
 

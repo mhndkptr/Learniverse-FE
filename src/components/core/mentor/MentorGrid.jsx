@@ -1,24 +1,15 @@
-// File: src/components/core/mentor/MentorGrid.jsx
-
 'use client'
 
 import MentorCard from './MentorCard'
 import { Skeleton } from '@/components/ui/skeleton'
 
-// [REVISI] Tambahkan prop isFetching
 export default function MentorGrid({ mentors, isLoading, isFetching }) {
-  // Tampilkan Skeleton jika sedang loading pertama kali ATAU sedang fetching data baru dari search
   if (isLoading || isFetching) {
     return (
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {[...Array(8)].map(
-          (
-            _,
-            i // Tampilkan 8 skeleton
-          ) => (
-            <Skeleton key={i} className="h-[250px] w-full rounded-xl" />
-          )
-        )}
+        {[...Array(8)].map((_, i) => (
+          <Skeleton key={i} className="h-[250px] w-full rounded-xl" />
+        ))}
       </div>
     )
   }
@@ -32,7 +23,6 @@ export default function MentorGrid({ mentors, isLoading, isFetching }) {
       </div>
     )
   }
-  // ... [Logika mapping ke MentorCard tetap sama]
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
       {mentors.map((item) => {
@@ -43,7 +33,7 @@ export default function MentorGrid({ mentors, isLoading, isFetching }) {
           id: item.id,
           name: item.user?.name || 'Mentor Learniverse',
           description: `Mentor for: ${courseTitlesText}`,
-          image: item.user?.photo_profile_url,
+          image: item.user?.profile_uri,
           courseTitles: item.courseTitles,
         }
 

@@ -19,9 +19,11 @@ import {
 } from '@/components/ui/sidebar'
 import { getTwoInitials } from '@/utils/helper'
 import { useAuth } from '@/contexts/auth.context'
+import { useRouter } from 'next/navigation'
 
-export function SidebarNavUser({ user }) {
-  const { logout } = useAuth()
+export function SidebarNavUser() {
+  const router = useRouter()
+  const { user, logout } = useAuth()
   const { isMobile } = useSidebar()
 
   return (
@@ -67,7 +69,11 @@ export function SidebarNavUser({ user }) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => logout()}>
+            <DropdownMenuItem onClick={() => router.push('/')}>
+              <LogOut />
+              Go to Home
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => logout()} variant="destructive">
               <LogOut />
               Log out
             </DropdownMenuItem>

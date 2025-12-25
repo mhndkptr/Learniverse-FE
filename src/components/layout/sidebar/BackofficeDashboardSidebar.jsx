@@ -28,11 +28,6 @@ import { SidebarNavMain } from './SidebarNavMain'
 import { SidebarNavUser } from './SidebarNavUser'
 
 const data = {
-  user: {
-    name: 'Administrator',
-    email: 'developer@dev.com',
-    avatar: '/avatars/shadcn.jpg',
-  },
   teams: [
     {
       name: 'Acme Inc',
@@ -126,7 +121,7 @@ export function BackofficeDashboardSidebar({ ...props }) {
         <SidebarNavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <SidebarNavUser user={data.user} />
+        <SidebarNavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

@@ -50,7 +50,6 @@ export default function ProfilePage() {
           { label: 'Akun', href: '/my/profile' },
           { label: 'Edit Profile', href: '/my/profile/edit' },
           { label: 'Ubah Password', href: '/my/profile/password' },
-          { label: 'Delete Akun', href: '/my/profile/delete' },
         ]}
       />
 

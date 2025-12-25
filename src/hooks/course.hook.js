@@ -7,6 +7,7 @@ import request, { handleAxiosError } from '@/utils/baseRequest'
 
 import {
   createCourseTransactionAction,
+  checkCourseEnrollmentAction,
   getAllCourseAction,
   getCourseByIdAction,
   getAllCourseAdminAction,
@@ -115,6 +116,22 @@ export function useCreateCourseTransactionMutation({ successAction } = {}) {
     onError: (error) => toast.error(error?.message || 'Something went wrong'),
   })
   return { createCourseTransactionMutation }
+}
+
+export function useCheckCourseEnrollmentMutation({ successAction } = {}) {
+  const checkCourseEnrollmentMutation = useMutation({
+    mutationFn: (data) => checkCourseEnrollmentAction({ id: data.id }),
+    onSuccess: (data) => {
+      if (data?.code === 200) {
+        if (successAction) successAction(data)
+        return data
+      } else {
+        toast.error(data?.message || 'Enrollment check failed')
+      }
+    },
+    onError: (error) => toast.error(error?.message || 'Something went wrong'),
+  })
+  return { checkCourseEnrollmentMutation }
 }
 
 /* =========================================================

@@ -26,71 +26,82 @@ import {
 import Image from 'next/image'
 import { SidebarNavMain } from './SidebarNavMain'
 import { SidebarNavUser } from './SidebarNavUser'
-
-const data = {
-  teams: [
-    {
-      name: 'Acme Inc',
-      logo: GalleryVerticalEnd,
-      plan: 'Enterprise',
-    },
-    {
-      name: 'Acme Corp.',
-      logo: AudioWaveform,
-      plan: 'Startup',
-    },
-    {
-      name: 'Evil Corp.',
-      logo: Command,
-      plan: 'Free',
-    },
-  ],
-  navMain: [
-    {
-      groupName: 'Dashboard',
-      showGroupLabel: false,
-      items: [
-        {
-          title: 'Overview',
-          url: '/backoffice',
-          icon: Home,
-          isActive: true,
-          items: null,
-        },
-        {
-          title: 'Course',
-          url: '/backoffice/course',
-          icon: LucideBookCopy,
-          isActive: true,
-          items: null,
-        },
-        {
-          title: 'Mentors',
-          url: '/backoffice/mentor',
-          icon: UserCheck2Icon,
-          isActive: true,
-          items: null,
-        },
-        {
-          title: 'Enrollments',
-          url: '/backoffice/enrollment',
-          icon: FilePlus2,
-          isActive: true,
-          items: null,
-        },
-        {
-          title: 'Users',
-          url: '/backoffice/user',
-          icon: UsersRound,
-          isActive: true,
-          items: null,
-        },
-      ],
-    },
-  ],
-}
+import { useAuth } from '@/contexts/auth.context'
 
 export function BackofficeDashboardSidebar({ ...props }) {
+  const { user } = useAuth()
+  const [data, setData] = React.useState({
+    navMain: [],
+  })
+
+  React.useEffect(() => {
+    if (user.role === 'ADMIN') {
+      setData({
+        navMain: [
+          {
+            groupName: 'Dashboard',
+            showGroupLabel: false,
+            items: [
+              {
+                title: 'Overview',
+                url: '/backoffice',
+                icon: Home,
+                isActive: true,
+                items: null,
+              },
+              {
+                title: 'Course',
+                url: '/backoffice/course',
+                icon: LucideBookCopy,
+                isActive: true,
+                items: null,
+              },
+              {
+                title: 'Mentors',
+                url: '/backoffice/mentor',
+                icon: UserCheck2Icon,
+                isActive: true,
+                items: null,
+              },
+              {
+                title: 'Enrollments',
+                url: '/backoffice/enrollment',
+                icon: FilePlus2,
+                isActive: true,
+                items: null,
+              },
+              {
+                title: 'Users',
+                url: '/backoffice/user',
+                icon: UsersRound,
+                isActive: true,
+                items: null,
+              },
+            ],
+          },
+        ],
+      })
+    } else {
+      setData({
+        navMain: [
+          {
+            groupName: 'Dashboard',
+            showGroupLabel: false,
+            items: [
+              {
+                title: 'Course',
+                url: '/backoffice/course',
+                icon: LucideBookCopy,
+                isActive: true,
+                items: null,
+              },
+            ],
+          },
+        ],
+      })
+    }
+  }, [user])
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>

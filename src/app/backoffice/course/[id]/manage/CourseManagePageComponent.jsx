@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -18,6 +18,7 @@ import {
   CourseManageProvider,
   useCourseManage,
 } from './_components/course-manage.context'
+import { useCheckCourseEnrollmentMutation } from '@/hooks/course.hook'
 
 const TAB_KEYS = ['general', 'module', 'mentor', 'quiz', 'schedule']
 const TAB_DEFS = [
@@ -30,12 +31,25 @@ const TAB_DEFS = [
 
 function CourseManageLayoutContent({ currentTab, children }) {
   const router = useRouter()
+  const params = useParams()
+  const courseId = params.id
   const { course, isLoading, user, isAdmin } = useCourseManage()
-  const isMentor = course?.mentors?.some(
-    (mentor) =>
-      (mentor.user?.id === user?.id || mentor.user_id === user?.id) &&
-      mentor.status === 'ACCEPTED'
-  )
+  const [isMentor, setIsMentor] = useState(false)
+  const { checkCourseEnrollmentMutation } = useCheckCourseEnrollmentMutation({
+    successAction: (data) => {
+      if (data?.data?.role === 'MENTOR') {
+        setIsMentor(true)
+      } else {
+        setIsMentor(false)
+      }
+    },
+  })
+  useEffect(() => {
+    // Cek apakah user adalah mentor atau bukan
+    checkCourseEnrollmentMutation.mutate({
+      id: courseId,
+    })
+  }, [courseId])
   const canAccess = isAdmin || isMentor
   const allowedTabs = isAdmin ? TAB_KEYS : ['module', 'quiz', 'schedule']
   const visibleTabs = TAB_DEFS.filter((tab) => allowedTabs.includes(tab.key))

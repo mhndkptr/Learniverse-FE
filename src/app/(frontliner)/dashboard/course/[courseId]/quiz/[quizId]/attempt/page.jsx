@@ -277,7 +277,7 @@ export default function QuizAttemptPage() {
                 questionNumber={currentQuestionIndex + 1}
                 totalQuestions={questions.length}
                 questionText={currentQuestion.question}
-                options={currentOptions.map((opt) => opt.answer)}
+                options={currentOptions}
                 selectedOption={
                   selectedOptionIndex >= 0 ? selectedOptionIndex : undefined
                 }

@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import QuizHeader from '@/components/core/quiz/QuizHeader'
 import QuizCard from '@/components/core/quiz/QuizCard'
 import StartAttemptModal from '@/components/core/quiz/StartAttemptModal'
 import { useAttemptQuizMutation, useGetAllQuiz } from '@/hooks/quiz.hook'
-import { formatDate } from '@/utils/helper'
+import { formatDate, formatDateTime } from '@/utils/helper'
+import { useCheckCourseEnrollmentMutation } from '@/hooks/course.hook'
 
 export default function QuizPage() {
   const params = useParams()
@@ -23,6 +24,23 @@ export default function QuizPage() {
       )
     },
   })
+  const [isMentor, setIsMentor] = useState(false)
+  const { checkCourseEnrollmentMutation } = useCheckCourseEnrollmentMutation({
+    successAction: (data) => {
+      if (data?.data?.role === 'MENTOR') {
+        setIsMentor(true)
+      } else {
+        setIsMentor(false)
+      }
+    },
+  })
+
+  useEffect(() => {
+    // Cek apakah user adalah mentor atau bukan
+    checkCourseEnrollmentMutation.mutate({
+      id: courseId,
+    })
+  }, [courseId])
 
   const { quizzes, isLoading, isPending } = useGetAllQuiz({
     params: {
@@ -61,9 +79,13 @@ export default function QuizPage() {
     router.push(`/dashboard/course/${courseId}/quiz/${quiz.id}/review`)
   }
 
+  const handlePreviewClick = (quiz) => {
+    router.push(`/dashboard/course/${courseId}/quiz/${quiz.id}/preview`)
+  }
+
   // 3. Handler Konfirmasi di Modal (Mulai Kuis)
   const handleConfirmAttempt = () => {
-    if (selectedQuiz) {
+    if (selectedQuiz && !isMentor) {
       createQuizAttemptMutation.mutate({
         payload: {
           quiz_id: selectedQuiz.id,
@@ -97,7 +119,7 @@ export default function QuizPage() {
                 key={quiz.id}
                 quiz={quiz}
                 title={quiz.title}
-                date={`${formatDate(quiz.start_date)} - ${formatDate(quiz.end_date)}`}
+                date={`${formatDateTime(quiz.start_date)} - ${formatDateTime(quiz.end_date)}`}
                 grade={
                   quiz.personal_highest_grade == null
                     ? '-'
@@ -112,21 +134,25 @@ export default function QuizPage() {
                       : 'Not Attempted'
                 }
                 buttonText={
-                  quiz.active_attempt_id
-                    ? 'Continue Attempt Quiz'
-                    : attempts.length === 0
-                      ? 'Attempt Quiz'
-                      : attempts.length < quiz.max_attempt
-                        ? 'Re-attempt Quiz'
-                        : 'No Attempts Left'
+                  isMentor
+                    ? 'Preview Quiz'
+                    : quiz.active_attempt_id
+                      ? 'Continue Attempt Quiz'
+                      : attempts.length === 0
+                        ? 'Attempt Quiz'
+                        : attempts.length < quiz.max_attempt
+                          ? 'Re-attempt Quiz'
+                          : 'No Attempts Left'
                 }
                 secondaryButtonText={
                   hasFinishedAttempt ? 'Review Quiz' : undefined
                 }
                 // Passing handlers
                 onAttemptClick={handleAttemptClick}
+                onPreviewClick={handlePreviewClick}
                 onReviewClick={handleReviewClick}
                 onSecondaryClick={handleReviewClick}
+                isMentor={isMentor}
               />
             )
           })

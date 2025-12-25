@@ -10,7 +10,7 @@ export default function QuestionCard({
   onClearSelection, // <--- Prop baru untuk menghapus jawaban
   image,
   isReview,
-  correctAnswer,
+  correctAnswers = [],
   userAnswer,
   status,
   timeLeftString,
@@ -72,18 +72,17 @@ export default function QuestionCard({
       <div className="space-y-4">
         {options.map((option, index) => {
           const isSelected = selectedOption === index || userAnswer === index
-          const isCorrect = correctAnswer === index
-          const isWrongAnswer = userAnswer === index && status === 'false'
+          const isCorrect = correctAnswers.some((ans) => ans.id === option.id)
 
           return (
             <label
-              key={index}
+              key={`${option.id}-${index}`}
               onClick={() => !isReview && onSelectOption(index)}
               className={`flex cursor-pointer items-center rounded-lg border-2 p-4 transition-all ${
                 isSelected
                   ? 'border-amber-800 bg-amber-50'
                   : 'border-gray-200 bg-white hover:border-gray-300'
-              } ${isReview && isWrongAnswer ? 'border-red-500 bg-red-50' : ''}`}
+              } ${isReview && !isCorrect && isSelected ? 'border-red-500 bg-red-50' : ''}`}
             >
               <div
                 className={`mr-4 flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${
@@ -96,12 +95,14 @@ export default function QuestionCard({
                   <div className="h-2 w-2 rounded-full bg-white"></div>
                 )}
               </div>
-              <span className="flex-1 font-medium text-gray-900">{option}</span>
+              <span className="flex-1 font-medium text-gray-900">
+                {option?.answer}
+              </span>
               {/* Icon Review Check/Cross (Sama seperti sebelumnya) */}
-              {isReview && isSelected && status === 'correct' && (
+              {isReview && isSelected && isCorrect && (
                 <span className="text-lg text-green-600">✓</span>
               )}
-              {isReview && isWrongAnswer && (
+              {isReview && isSelected && !isCorrect && (
                 <span className="text-lg text-red-600">✗</span>
               )}
               {isReview &&
@@ -113,6 +114,22 @@ export default function QuestionCard({
             </label>
           )
         })}
+      </div>
+
+      <div className="mt-6">
+        {/* Bagian untuk menampilkan jawaban benar nya */}
+        {isReview && (
+          <div className="mt-4 rounded-lg bg-green-50 p-4">
+            <h3 className="mb-2 font-semibold text-green-800">
+              Correct Answer(s):
+            </h3>
+            <ul className="list-disc pl-5 text-green-900">
+              {correctAnswers.map((item) => (
+                <li key={item.id}>{item.answer}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       {/* --- FITUR BARU: CLEAR SELECTION --- */}

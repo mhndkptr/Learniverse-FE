@@ -142,7 +142,7 @@ export default function EditQuizPage() {
         title: quiz.title || '',
         description: quiz.description || '',
         status: quiz.status || 'DRAFT',
-        show_review: quiz.show_review ? 'true' : 'false',
+        show_review: quiz.show_review,
         start_date: formatDate(quiz.start_date || quiz.exam_date),
         end_date: formatDate(quiz.end_date || quiz.due_date),
         max_attempt: quiz.max_attempt || 1,

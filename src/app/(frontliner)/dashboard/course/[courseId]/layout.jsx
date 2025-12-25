@@ -3,10 +3,14 @@
 import { ArrowLeft, Settings } from 'lucide-react'
 import CourseHeader from '@/components/core/dashboard/CourseHeader'
 import CourseTabs from '@/components/core/dashboard/CourseTabs'
-import { useGetCourseByIdDashboard } from '@/hooks/course.hook'
+import {
+  useCheckCourseEnrollmentMutation,
+  useGetCourseByIdDashboard,
+} from '@/hooks/course.hook'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth.context'
 import { Button } from '@/components/ui/button'
+import { useEffect, useState } from 'react'
 
 const tabs = [
   {
@@ -39,6 +43,22 @@ export default function DashboardCourseLayout({ children }) {
   const { course, isLoading, isPending } = useGetCourseByIdDashboard({
     courseId: courseId,
   })
+  const [isMentor, setIsMentor] = useState(false)
+  const { checkCourseEnrollmentMutation } = useCheckCourseEnrollmentMutation({
+    successAction: (data) => {
+      if (data?.data?.role === 'MENTOR') {
+        setIsMentor(true)
+      } else {
+        setIsMentor(false)
+      }
+    },
+  })
+  useEffect(() => {
+    // Cek apakah user adalah mentor atau bukan
+    checkCourseEnrollmentMutation.mutate({
+      id: courseId,
+    })
+  }, [courseId])
 
   if (isLoading || isPending || isAuthLoading) {
     return (
@@ -51,11 +71,7 @@ export default function DashboardCourseLayout({ children }) {
   const isEnrolled = course?.course_enrollments?.some(
     (enrollment) => enrollment.user_id === user?.id
   )
-  const isMentor = course?.mentors?.some(
-    (mentor) =>
-      (mentor.user?.id === user?.id || mentor.user_id === user?.id) &&
-      mentor.status === 'ACCEPTED'
-  )
+
   const canAccess = user?.role === 'ADMIN' || Boolean(isEnrolled || isMentor)
   const canManage = user?.role === 'ADMIN' || Boolean(isMentor)
 

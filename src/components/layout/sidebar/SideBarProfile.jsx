@@ -19,7 +19,7 @@ export default function SideBarProfile({ items = [] }) {
   }
 
   return (
-    <aside className="w-full max-w-xs space-y-3 rounded-xl bg-gray-50 p-4 shadow-sm md:w-64">
+    <aside className="w-full max-w-xs space-y-3 self-start rounded-xl bg-gray-50 p-4 shadow-sm md:h-fit md:w-64">
       <h2 className="text-lg font-semibold text-gray-900">Pengaturan</h2>
       <div className="mt-2 flex flex-col gap-2">
         {items.map((item) =>

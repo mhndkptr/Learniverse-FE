@@ -5,13 +5,21 @@ import { useParams, useRouter } from 'next/navigation'
 import QuizHeader from '@/components/core/quiz/QuizHeader'
 import QuizCard from '@/components/core/quiz/QuizCard'
 import StartAttemptModal from '@/components/core/quiz/StartAttemptModal'
-import { useGetAllQuiz } from '@/hooks/quiz.hook'
+import { useAttemptQuizMutation, useGetAllQuiz } from '@/hooks/quiz.hook'
 import { formatDate } from '@/utils/helper'
 
 export default function QuizPage() {
   const params = useParams()
   const courseId = params.courseId
   const router = useRouter()
+  const { createQuizAttemptMutation } = useAttemptQuizMutation({
+    successAction: () => {
+      setIsModalOpen(false)
+      router.push(
+        `/dashboard/course/${courseId}/quiz/${selectedQuiz.id}/attempt`
+      )
+    },
+  })
 
   const { quizzes, isLoading, isPending } = useGetAllQuiz({
     params: {
@@ -26,10 +34,13 @@ export default function QuizPage() {
         status: 'PUBLISH',
         course_id: courseId,
       },
+      include_relation: ['quiz_attempts'],
     },
   })
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedQuiz, setSelectedQuiz] = useState(null)
+
+  console.log('quizzes:', quizzes)
 
   // 1. Handler saat tombol "Attempt" diklik (Membuka Modal)
   const handleAttemptClick = (quiz) => {
@@ -39,17 +50,17 @@ export default function QuizPage() {
 
   // 2. Handler saat tombol "Review" diklik (Langsung Pindah Halaman)
   const handleReviewClick = (quiz) => {
-    router.push(`/dashboard/course/quiz/${quiz.id}/review`)
+    router.push(`/dashboard/course/${courseId}/quiz/${quiz.id}/review`)
   }
 
   // 3. Handler Konfirmasi di Modal (Mulai Kuis)
   const handleConfirmAttempt = () => {
     if (selectedQuiz) {
-      console.log('[Route] Starting attempt for ID:', selectedQuiz.id)
-      setIsModalOpen(false)
-
-      // Navigasi ke: /dashboard/course/quiz/[id]/attempt
-      router.push(`/dashboard/course/quiz/${selectedQuiz.id}/attempt`)
+      createQuizAttemptMutation.mutate({
+        payload: {
+          quiz_id: selectedQuiz.id,
+        },
+      })
     }
   }
 
@@ -68,21 +79,45 @@ export default function QuizPage() {
         ) : quizzes.length === 0 ? (
           <p>No quizzes available.</p>
         ) : (
-          quizzes.map((quiz) => (
-            <QuizCard
-              key={quiz.id}
-              quiz={quiz}
-              title={quiz.title}
-              date={`${formatDate(quiz.start_date)} - ${formatDate(quiz.end_date)}`}
-              grades={quiz.grades || '-'}
-              description={quiz.description}
-              status={quiz.status || 'not-yet'}
-              buttonText={quiz.buttonText || 'Attempt'}
-              // Passing handlers
-              onAttemptClick={handleAttemptClick}
-              onReviewClick={handleReviewClick}
-            />
-          ))
+          quizzes.map((quiz) => {
+            console.log(quiz)
+            return (
+              <QuizCard
+                key={quiz.id}
+                quiz={quiz}
+                title={quiz.title}
+                date={`${formatDate(quiz.start_date)} - ${formatDate(quiz.end_date)}`}
+                grade={
+                  quiz.personal_highest_grade == null
+                    ? '-'
+                    : quiz.personal_highest_grade
+                }
+                description={quiz.description}
+                status={
+                  quiz.active_attempt_id
+                    ? 'in-progress'
+                    : quiz.is_attempted
+                      ? 'completed'
+                      : 'Not Attempted'
+                }
+                buttonText={
+                  quiz.active_attempt_id
+                    ? 'Continue'
+                    : quiz.max_attempts > 0 && !quiz.is_attempted
+                      ? 'Attempt'
+                      : quiz.is_attempted &&
+                          quiz.max_attempts < quiz.quiz_attempts.length
+                        ? 'Re-attempt'
+                        : quiz.show_review
+                          ? 'Review'
+                          : 'No Attempts Left'
+                }
+                // Passing handlers
+                onAttemptClick={handleAttemptClick}
+                onReviewClick={handleReviewClick}
+              />
+            )
+          })
         )}
       </div>
 
@@ -91,6 +126,7 @@ export default function QuizPage() {
         onClose={handleCloseModal}
         onConfirm={handleConfirmAttempt}
         quizTitle={selectedQuiz?.title || ''}
+        isLoading={createQuizAttemptMutation.isPending}
       />
     </div>
   )

@@ -51,7 +51,7 @@ const quizFormSchema = z.object({
   title: z.string().min(1, { message: 'Title is required' }),
   description: z.string().min(1, { message: 'Description is required' }),
   status: z.enum(['PUBLISH', 'DRAFT']),
-  show_review: z.string().transform((val) => val === 'true'),
+  show_review: z.boolean(),
   start_date: z.string().min(1, { message: 'Start date is required' }),
   end_date: z.string().min(1, { message: 'End date is required' }),
   max_attempt: z.coerce.number().min(1, { message: 'Minimal 1 attempt' }),
@@ -112,7 +112,7 @@ export default function EditQuizPage() {
       title: '',
       description: '',
       status: 'DRAFT',
-      show_review: 'true',
+      show_review: true,
       start_date: '',
       end_date: '',
       max_attempt: 1,
@@ -464,7 +464,9 @@ export default function EditQuizPage() {
                     <FormItem>
                       <FormLabel>Show Review</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={(value) =>
+                          field.onChange(value === 'true' ? true : false)
+                        }
                         value={field.value ? 'true' : 'false'}
                       >
                         <FormControl>

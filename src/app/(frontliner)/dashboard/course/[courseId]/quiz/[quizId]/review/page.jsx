@@ -110,7 +110,7 @@ export default function QuizReviewPage() {
 
   if (isAttemptsLoading || isAttemptLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-gray-500">
+      <div className="flex min-h-max items-center justify-center text-gray-500">
         Loading quiz review...
       </div>
     )
@@ -118,17 +118,14 @@ export default function QuizReviewPage() {
 
   if (!selectedAttemptId || !attempt) {
     return (
-      <div
-        className="min-h-screen bg-gray-50 p-6"
-        style={{ paddingTop: '120px' }}
-      >
+      <div className="min-h-max p-6">
         <div className="mx-auto w-full max-w-5xl space-y-6">
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <h1 className="text-2xl font-bold text-gray-900">
-              Ringkasan pengerjaan kuis sebelumnya
+              Summary of previous attempts
             </h1>
             <p className="mt-2 text-sm text-gray-500">
-              Pilih attempt yang ingin kamu review.
+              Select the attempt you want to review.
             </p>
           </div>
 
@@ -136,18 +133,18 @@ export default function QuizReviewPage() {
             <div className="grid grid-cols-4 gap-4 border-b border-gray-100 bg-gray-50 px-6 py-4 text-sm font-semibold text-gray-700">
               <div>Attempt</div>
               <div>Status</div>
-              <div className="text-center">Nilai</div>
-              <div className="text-right">Aksi</div>
+              <div className="text-center">Grade</div>
+              <div className="text-right">Action</div>
             </div>
             <div className="divide-y divide-gray-100">
               {attempts.length === 0 ? (
                 <div className="px-6 py-6 text-sm text-gray-500">
-                  Belum ada attempt yang selesai.
+                  No attempts have been completed yet.
                 </div>
               ) : (
                 attempts.map((item, index) => {
                   const submittedAt = item.finish_at
-                    ? new Date(item.finish_at).toLocaleString('id-ID', {
+                    ? new Date(item.finish_at).toLocaleString('en-US', {
                         weekday: 'long',
                         year: 'numeric',
                         month: 'long',
@@ -167,11 +164,11 @@ export default function QuizReviewPage() {
                       <div>
                         <p className="font-semibold">
                           {item.status === 'FINISHED'
-                            ? 'Selesai mengerjakan'
-                            : 'Belum selesai'}
+                            ? 'Finished'
+                            : 'In Progress'}
                         </p>
                         <p className="text-xs text-gray-500">
-                          Diserahkan {submittedAt}
+                          Submitted on {submittedAt}
                         </p>
                       </div>
                       <div className="text-center font-semibold text-gray-900">
@@ -193,7 +190,7 @@ export default function QuizReviewPage() {
           </div>
 
           <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center text-lg font-semibold text-gray-900 shadow-sm">
-            Nilai akhir Anda untuk kuis ini adalah{' '}
+            Your final grade for this quiz is{' '}
             {Math.round(
               Math.max(0, ...attempts.map((item) => item.grade || 0))
             )}
@@ -225,10 +222,7 @@ export default function QuizReviewPage() {
   }
 
   return (
-    <div
-      className="min-h-screen bg-gray-50 p-6"
-      style={{ paddingTop: '120px' }}
-    >
+    <div className="min-h-max p-6">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 lg:grid-cols-4">
         <div className="lg:col-span-3">
           <div className="mb-6">

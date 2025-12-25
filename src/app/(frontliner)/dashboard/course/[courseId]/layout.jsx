@@ -63,20 +63,20 @@ export default function DashboardCourseLayout({ children }) {
     return (
       <div className="flex h-full items-center justify-center px-6 py-24">
         <div className="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-8 text-center shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900">Akses ditolak</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Access Denied</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Anda hanya bisa mengakses dashboard course jika sudah terdaftar pada
-            course ini.
+            You can only access the course dashboard if you are enrolled in this
+            course.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Button variant="outline" onClick={() => router.back()}>
-              Kembali
+              Back
             </Button>
             <Button
               className="bg-[#0E1B50] text-white hover:bg-blue-900"
               onClick={() => (window.location.href = '/course')}
             >
-              Lihat Course Lainnya
+              View Other Courses
             </Button>
           </div>
         </div>

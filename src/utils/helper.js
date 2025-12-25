@@ -80,6 +80,7 @@ export function setObjValueByPath(obj, path, value) {
  * getTwoInitials("Alice Wonderland"); // Mengembalikan "AW"
  */
 export function getTwoInitials(name) {
+  if (!name) return ''
   const words = name.split(' ')
   const firstInitial = words[0].charAt(0).toUpperCase()
   const secondInitial =

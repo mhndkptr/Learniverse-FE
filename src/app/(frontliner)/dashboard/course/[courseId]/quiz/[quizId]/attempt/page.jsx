@@ -1,93 +1,197 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { toast } from 'sonner'
 import QuestionCard from '@/components/core/quiz/QuestionCard'
 import FinishAttemptModal from '@/components/core/quiz/FinishAttemptModal'
 import QuizNavigation from '@/components/core/quiz/QuizNavigation'
-
-// MOCK DATA SOAL (Tetap sama)
-const mockQuestions = [
-  {
-    id: 1,
-    text: 'What is the derivative of f(x) = x²?',
-    options: ['2x', 'x', '2', 'x²'],
-  },
-  {
-    id: 2,
-    text: 'Evaluate the integral ∫ 2x dx.',
-    options: ['x² + C', '2x² + C', 'x + C', 'x³ + C'],
-  },
-  {
-    id: 3,
-    text: 'Limit of (1/x) as x -> infinity?',
-    options: ['0', '1', 'Infinity', 'Undefined'],
-  },
-  {
-    id: 4,
-    text: 'd/dx (sin x) = ?',
-    options: ['cos x', '-cos x', 'sin x', '-sin x'],
-  },
-  {
-    id: 5,
-    text: 'Integral of 1/x dx?',
-    options: ['ln|x| + C', 'x + C', '1/x^2', 'e^x'],
-  },
-  {
-    id: 6,
-    text: 'Value of pi approx?',
-    options: ['3.14', '3.15', '3.16', '3.13'],
-  },
-  { id: 7, text: 'Sqrt(144)?', options: ['12', '14', '10', '11'] },
-  { id: 8, text: '2 + 2 x 2?', options: ['6', '8', '4', '10'] },
-  { id: 9, text: 'Log(1) base 10?', options: ['0', '1', '10', 'undefined'] },
-  { id: 10, text: 'E = mc^?', options: ['2', '3', '4', '1'] },
-]
+import { useAuth } from '@/contexts/auth.context'
+import {
+  useAttemptQuizMutation,
+  useGetQuizAttemptById,
+  useGetQuizAttempts,
+  useUpdateQuizAttemptMutation,
+} from '@/hooks/quiz.hook'
 
 export default function QuizAttemptPage() {
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
+  const { user } = useAuth()
 
+  const courseId = params.courseId
+  const quizId = params.quizId
+  const attemptIdParam = searchParams.get('attemptId')
+  const shouldStart = searchParams.get('start') === 'true'
+
+  const [attemptId, setAttemptId] = useState(attemptIdParam)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState({})
-  const [timeLeft, setTimeLeft] = useState(40 * 60)
+  const [timeLeft, setTimeLeft] = useState(null)
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false)
+  const hasSubmittedRef = useRef(false)
+  const hasInitializedTimerRef = useRef(false)
+
+  const { attempts } = useGetQuizAttempts({
+    params:
+      user && quizId && !attemptId
+        ? {
+            get_all: true,
+            filter: {
+              quiz_id: quizId,
+              user_id: user.id,
+              status: 'ON_PROGRESS',
+            },
+          }
+        : undefined,
+    enabled: !!user && !!quizId && !attemptId,
+  })
+
+  const { createQuizAttemptMutation } = useAttemptQuizMutation({
+    successAction: (data) => {
+      const newAttemptId = data?.data?.id
+      if (newAttemptId) {
+        setAttemptId(newAttemptId)
+      }
+    },
+  })
+
+  const { attempt, isLoading: isAttemptLoading } = useGetQuizAttemptById({
+    attemptId,
+  })
+
+  const { updateQuizAttemptMutation } = useUpdateQuizAttemptMutation({
+    successAction: () => {
+      router.replace(
+        `/dashboard/course/${courseId}/quiz/${quizId}/review?attemptId=${attemptId}`
+      )
+    },
+  })
 
   useEffect(() => {
-    if (timeLeft <= 0) {
-      handleSubmitQuiz()
+    if (attemptIdParam && attemptIdParam !== attemptId) {
+      setAttemptId(attemptIdParam)
+    }
+  }, [attemptIdParam, attemptId])
+
+  useEffect(() => {
+    if (attemptId || !user || !quizId) return
+    if (attempts.length > 0) {
+      setAttemptId(attempts[0].id)
       return
     }
+
+    if (shouldStart && !createQuizAttemptMutation.isPending) {
+      createQuizAttemptMutation.mutate({
+        payload: {
+          quiz_id: quizId,
+        },
+      })
+    }
+  }, [
+    attempts,
+    attemptId,
+    createQuizAttemptMutation,
+    quizId,
+    shouldStart,
+    user,
+  ])
+
+  const questions = useMemo(() => {
+    return attempt?.quiz?.quiz_questions || []
+  }, [attempt])
+
+  const calculateTimeLeft = () => {
+    const durationMinutes = attempt?.quiz?.duration
+    if (!attempt?.start_at || !durationMinutes || durationMinutes <= 0) {
+      return null
+    }
+    const durationSeconds = durationMinutes * 60
+    const startAt = new Date(attempt.start_at).getTime()
+    if (!Number.isFinite(startAt)) {
+      return null
+    }
+    const elapsedSeconds = Math.floor((Date.now() - startAt) / 1000)
+    const remaining = durationSeconds - elapsedSeconds
+    if (!Number.isFinite(remaining)) {
+      return null
+    }
+    return Math.max(remaining, 0)
+  }
+
+  useEffect(() => {
+    if (!attempt) return
+
+    const existingAnswers = {}
+    ;(attempt.quiz_attempt_question_answers || []).forEach((answer) => {
+      if (answer.quiz_question_id && answer.quiz_option_answer_id) {
+        existingAnswers[answer.quiz_question_id] = answer.quiz_option_answer_id
+      }
+    })
+
+    setAnswers(existingAnswers)
+    setCurrentQuestionIndex(0)
+    const initialTimeLeft = calculateTimeLeft()
+    setTimeLeft(initialTimeLeft)
+    hasSubmittedRef.current = false
+    hasInitializedTimerRef.current = true
+  }, [attempt])
+
+  useEffect(() => {
+    if (!attempt) return undefined
+    if (!attempt.quiz?.duration || attempt.quiz.duration <= 0) return undefined
+
     const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1)
+      setTimeLeft(calculateTimeLeft())
     }, 1000)
+
     return () => clearInterval(timer)
-  }, [timeLeft])
+  }, [attempt])
+
+  useEffect(() => {
+    if (!attempt) return
+    if (!attempt.quiz?.duration || attempt.quiz.duration <= 0) return
+    if (!hasInitializedTimerRef.current) return
+    if (!Number.isFinite(timeLeft)) return
+    if (timeLeft > 0) return
+    if (hasSubmittedRef.current) return
+
+    hasSubmittedRef.current = true
+    handleSubmitQuiz(true)
+  }, [attempt, timeLeft])
 
   const formatTime = (seconds) => {
+    if (!Number.isFinite(seconds)) return '--:--'
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`
   }
 
   const handleSelectOption = (optionIndex) => {
+    const currentQuestion = questions[currentQuestionIndex]
+    const option = currentQuestion?.quiz_option_answers?.[optionIndex]
+    if (!currentQuestion || !option) return
+
     setAnswers((prev) => ({
       ...prev,
-      [currentQuestionIndex]: optionIndex,
+      [currentQuestion.id]: option.id,
     }))
   }
 
-  // --- LOGIC BARU: MENGHAPUS JAWABAN ---
   const handleClearSelection = () => {
+    const currentQuestion = questions[currentQuestionIndex]
+    if (!currentQuestion) return
+
     setAnswers((prev) => {
       const newAnswers = { ...prev }
-      delete newAnswers[currentQuestionIndex] // Hapus key jawaban untuk soal ini
+      delete newAnswers[currentQuestion.id]
       return newAnswers
     })
   }
 
   const handleNext = () => {
-    if (currentQuestionIndex < mockQuestions.length - 1) {
+    if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1)
     }
   }
@@ -106,38 +210,88 @@ export default function QuizAttemptPage() {
     setIsFinishModalOpen(true)
   }
 
-  const handleSubmitQuiz = () => {
-    console.log('Submitting answers:', answers)
-    setIsFinishModalOpen(false)
-    router.push(`/dashboard/course/quiz/${params.quizId}/review`)
+  const buildAnswerPayload = () => {
+    return Object.entries(answers).map(([questionId, optionId]) => ({
+      quiz_question_id: questionId,
+      quiz_option_answer_id: optionId,
+    }))
   }
 
-  const currentQuestion = mockQuestions[currentQuestionIndex]
+  const handleSubmitQuiz = (isAutoSubmit = false) => {
+    if (!attemptId) return
+
+    updateQuizAttemptMutation.mutate({
+      id: attemptId,
+      payload: {
+        status: 'FINISHED',
+        finish_at: new Date().toISOString(),
+        quiz_attempt_question_answers: buildAnswerPayload(),
+      },
+    })
+
+    if (isAutoSubmit) {
+      toast.success('Attempt auto-submitted')
+    }
+
+    setIsFinishModalOpen(false)
+  }
+
+  if (isAttemptLoading || createQuizAttemptMutation.isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-gray-500">
+        Loading quiz attempt...
+      </div>
+    )
+  }
+
+  if (!attemptId || !attempt) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 text-gray-500">
+        <p>Quiz attempt not available.</p>
+        <button
+          className="rounded-lg border border-gray-300 px-4 py-2 text-sm"
+          onClick={() => router.replace(`/dashboard/course/${courseId}/quiz`)}
+        >
+          Back to quiz list
+        </button>
+      </div>
+    )
+  }
+
+  const currentQuestion = questions[currentQuestionIndex]
+  const currentOptions = currentQuestion?.quiz_option_answers || []
+  const selectedOptionId = currentQuestion
+    ? answers[currentQuestion.id]
+    : undefined
+  const selectedOptionIndex = currentOptions.findIndex(
+    (opt) => opt.id === selectedOptionId
+  )
 
   return (
     <div
       className="min-h-screen bg-gray-50 p-6"
       style={{ paddingTop: '120px' }}
     >
-      {/* PERBAIKAN LAYOUT:
-        1. max-w-7xl (diperlebar sedikit agar muat gap besar)
-        2. gap-12 (membuat jarak antara soal dan navigasi jauh lebih lega)
-      */}
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 lg:grid-cols-4">
-        {/* KOLOM KIRI (SOAL) */}
         <div className="lg:col-span-3">
           <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
-            <QuestionCard
-              questionNumber={currentQuestionIndex + 1}
-              totalQuestions={mockQuestions.length}
-              questionText={currentQuestion.text}
-              options={currentQuestion.options}
-              selectedOption={answers[currentQuestionIndex]}
-              onSelectOption={handleSelectOption}
-              onClearSelection={handleClearSelection} // Pass function hapus jawaban
-              timeLeftString={formatTime(timeLeft)}
-              isReview={false}
-            />
+            {currentQuestion ? (
+              <QuestionCard
+                questionNumber={currentQuestionIndex + 1}
+                totalQuestions={questions.length}
+                questionText={currentQuestion.question}
+                options={currentOptions.map((opt) => opt.answer)}
+                selectedOption={
+                  selectedOptionIndex >= 0 ? selectedOptionIndex : undefined
+                }
+                onSelectOption={handleSelectOption}
+                onClearSelection={handleClearSelection}
+                timeLeftString={formatTime(timeLeft)}
+                isReview={false}
+              />
+            ) : (
+              <p>No questions available.</p>
+            )}
 
             <div className="mt-16 flex justify-between border-t border-gray-100 pt-6">
               <button
@@ -152,7 +306,7 @@ export default function QuizAttemptPage() {
                 Previous
               </button>
 
-              {currentQuestionIndex === mockQuestions.length - 1 ? (
+              {currentQuestionIndex === questions.length - 1 ? (
                 <button
                   onClick={handleFinishClick}
                   className="rounded-lg bg-amber-700 px-6 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-amber-800 hover:shadow-md"
@@ -171,13 +325,20 @@ export default function QuizAttemptPage() {
           </div>
         </div>
 
-        {/* KOLOM KANAN (NAVIGASI) */}
         <div className="lg:col-span-1">
           <div className="sticky top-24 h-fit">
             <QuizNavigation
-              totalQuestions={mockQuestions.length}
+              totalQuestions={questions.length}
               currentQuestionIndex={currentQuestionIndex}
-              answers={answers}
+              answers={Object.keys(answers).reduce((acc, questionId) => {
+                const questionIndex = questions.findIndex(
+                  (q) => q.id === questionId
+                )
+                if (questionIndex >= 0) {
+                  acc[questionIndex] = 0
+                }
+                return acc
+              }, {})}
               onNavigate={handleNavigateToQuestion}
             />
           </div>
@@ -187,7 +348,7 @@ export default function QuizAttemptPage() {
       <FinishAttemptModal
         isOpen={isFinishModalOpen}
         onClose={() => setIsFinishModalOpen(false)}
-        onConfirm={handleSubmitQuiz}
+        onConfirm={() => handleSubmitQuiz(false)}
       />
     </div>
   )

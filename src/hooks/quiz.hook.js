@@ -11,6 +11,9 @@ import {
   getAllActiveQuizAction,
   getAllQuizAction,
   createAttemptQuizAction,
+  getAllQuizAttemptAction,
+  getQuizAttemptByIdAction,
+  updateQuizAttemptAction,
 } from '@/actions/quiz.action'
 import { useMemo } from 'react'
 
@@ -273,7 +276,7 @@ export function useAttemptQuizMutation({ successAction }) {
     mutationFn: (data) => createAttemptQuizAction({ body: data.payload }),
     onSuccess: (data) => {
       if (data?.code === 201) {
-        successAction()
+        if (successAction) successAction(data)
         toast.success(data?.message)
       } else {
         toast.error('Quiz attempt failed to create!', {
@@ -293,4 +296,59 @@ export function useAttemptQuizMutation({ successAction }) {
   })
 
   return { createQuizAttemptMutation }
+}
+
+export function useGetQuizAttempts({ params, enabled = true }) {
+  const { data, isLoading, isPending, refetch } = useQuery({
+    queryKey: ['getQuizAttempts', params],
+    queryFn: () => getAllQuizAttemptAction({ params }),
+    enabled,
+    retry: false,
+    refetchOnWindowFocus: false,
+    onError: (error) =>
+      toast.error(error?.message ?? 'Failed to load quiz attempts'),
+  })
+
+  const attempts = useMemo(() => {
+    return data?.code === 200 ? data.data : []
+  }, [data])
+
+  return { attempts, isLoading, isPending, refetch }
+}
+
+export function useGetQuizAttemptById({ attemptId }) {
+  const { data, isLoading, isPending, refetch } = useQuery({
+    queryKey: ['getQuizAttemptById', attemptId],
+    queryFn: () => getQuizAttemptByIdAction({ id: attemptId }),
+    enabled: !!attemptId,
+    retry: false,
+    refetchOnWindowFocus: false,
+    onError: (error) =>
+      toast.error(error?.message ?? 'Failed to load quiz attempt'),
+  })
+
+  const attempt = useMemo(() => {
+    return data?.code === 200 ? data.data : null
+  }, [data])
+
+  return { attempt, isLoading, isPending, refetch }
+}
+
+export function useUpdateQuizAttemptMutation({ successAction } = {}) {
+  const updateQuizAttemptMutation = useMutation({
+    mutationFn: (data) =>
+      updateQuizAttemptAction({ id: data.id, body: data.payload }),
+    onSuccess: (data) => {
+      if (data?.code === 200) {
+        if (successAction) successAction(data)
+        toast.success(data?.message)
+      } else {
+        toast.error(data?.message || 'Failed to update quiz attempt')
+      }
+    },
+    onError: (error) =>
+      toast.error(error?.message ?? 'Failed to update quiz attempt'),
+  })
+
+  return { updateQuizAttemptMutation }
 }

@@ -47,6 +47,33 @@ export async function createAttemptQuizAction({ body }) {
   }
 }
 
+export async function getAllQuizAttemptAction({ params }) {
+  try {
+    const res = await request.get('/quiz/attempt', { params })
+    return res.data
+  } catch (error) {
+    return handleAxiosError(error)
+  }
+}
+
+export async function getQuizAttemptByIdAction({ id }) {
+  try {
+    const res = await request.get(`/quiz/attempt/${id}`)
+    return res.data
+  } catch (error) {
+    return handleAxiosError(error)
+  }
+}
+
+export async function updateQuizAttemptAction({ id, body }) {
+  try {
+    const res = await request.patch(`/quiz/attempt/${id}`, body)
+    return res.data
+  } catch (error) {
+    return handleAxiosError(error)
+  }
+}
+
 export async function updateQuizAction({ id, body }) {
   try {
     const res = await request.patch(`/quiz/${id}`, body)

@@ -17,7 +17,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 
-const data = [
+const defaultData = [
   { name: 'Jan', enrollments: 400 },
   { name: 'Feb', enrollments: 480 },
   { name: 'Mar', enrollments: 520 },
@@ -27,7 +27,9 @@ const data = [
   { name: 'Jul', enrollments: 856 },
 ]
 
-export default function EnrollmentChart() {
+export default function EnrollmentChart({ data = defaultData }) {
+  const chartData = data?.length ? data : defaultData
+
   return (
     <Card className="border-0 shadow-sm">
       <CardHeader>
@@ -36,7 +38,7 @@ export default function EnrollmentChart() {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
+          <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
             <XAxis dataKey="name" />
             <YAxis />

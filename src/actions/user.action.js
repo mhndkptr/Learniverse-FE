@@ -28,6 +28,15 @@ export async function updateUserAction({ id, body }) {
   }
 }
 
+export async function changePasswordAction({ id, body }) {
+  try {
+    const res = await request.patch(`/user/${id}/change-password`, body)
+    return res.data
+  } catch (error) {
+    return handleAxiosError(error)
+  }
+}
+
 export async function deleteUserAction({ id }) {
   try {
     const res = await request.delete(`/user/${id}`)

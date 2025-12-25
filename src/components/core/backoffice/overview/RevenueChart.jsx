@@ -17,17 +17,16 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 
-const data = [
+const defaultData = [
   { name: 'Week 1', revenue: 4000 },
   { name: 'Week 2', revenue: 3000 },
   { name: 'Week 3', revenue: 2000 },
   { name: 'Week 4', revenue: 2780 },
-  { name: 'Week 5', revenue: 1890 },
-  { name: 'Week 6', revenue: 2390 },
-  { name: 'Week 7', revenue: 3490 },
 ]
 
-export default function RevenueChart() {
+export default function RevenueChart({ data = defaultData }) {
+  const chartData = data?.length ? data : defaultData
+
   return (
     <Card className="border-0 shadow-sm">
       <CardHeader>
@@ -36,7 +35,7 @@ export default function RevenueChart() {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
+          <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
             <XAxis dataKey="name" />
             <YAxis />

@@ -7,10 +7,11 @@ import SideBarProfile from '@/components/layout/sidebar/SideBarProfile'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/auth.context'
-import { updateUserAction } from '@/actions/user.action'
+import { changePasswordAction } from '@/actions/user.action'
 
 export default function UpdatePasswordPage() {
   const { user, isAuthLoading } = useAuth()
+  const [oldPassword, setOldPassword] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -32,9 +33,14 @@ export default function UpdatePasswordPage() {
   }
 
   const handleSave = async () => {
+    const trimmedOldPassword = oldPassword.trim()
     const trimmedPassword = password.trim()
     const trimmedConfirmation = passwordConfirmation.trim()
 
+    if (!trimmedOldPassword) {
+      toast.error('Password lama wajib diisi')
+      return
+    }
     if (!trimmedPassword) {
       toast.error('Password is required')
       return
@@ -58,13 +64,17 @@ export default function UpdatePasswordPage() {
 
     setIsSaving(true)
     try {
-      const payload = new FormData()
-      payload.append('password', trimmedPassword)
-      payload.append('password_confirmation', trimmedConfirmation)
-
-      const res = await updateUserAction({ id: user.id, body: payload })
+      const res = await changePasswordAction({
+        id: user.id,
+        body: {
+          old_password: trimmedOldPassword,
+          new_password: trimmedPassword,
+          new_password_confirmation: trimmedConfirmation,
+        },
+      })
       if (res?.code === 200) {
         toast.success('Password updated')
+        setOldPassword('')
         setPassword('')
         setPasswordConfirmation('')
       } else {
@@ -90,6 +100,15 @@ export default function UpdatePasswordPage() {
       <section className="flex-1 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-bold text-gray-900">Ubah password</h2>
         <div className="mt-4 space-y-3">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-gray-800">Password lama</p>
+            <Input
+              type="password"
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
+              placeholder="Masukkan password lama"
+            />
+          </div>
           <div className="space-y-1">
             <p className="text-sm font-medium text-gray-800">Password baru</p>
             <Input

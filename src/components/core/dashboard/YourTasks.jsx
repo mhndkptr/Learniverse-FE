@@ -88,7 +88,7 @@ export default function YourTasks() {
                     </p>
 
                     <Link
-                      href={`/dashboard/course/${task.course?.id}/quiz/${task.id}/attempt`}
+                      href={`/dashboard/course/${task.course?.id}/quiz/${task.id}/attempt?start=true`}
                     >
                       <Button variant="secondary" size="sm">
                         Attempt Now <ArrowUpRight size={12} />

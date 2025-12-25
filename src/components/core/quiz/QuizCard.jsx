@@ -8,10 +8,12 @@ export default function QuizCard(props) {
     description = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Tempus bibendum nisl duis mauris mauris consuleo.',
     status = 'not-yet',
     buttonText = 'Attempt',
+    secondaryButtonText,
     quiz = null,
 
     onAttemptClick = () => {},
     onReviewClick = () => {},
+    onSecondaryClick = () => {},
   } = props
 
   const getStatusBadge = () => {
@@ -58,11 +60,17 @@ export default function QuizCard(props) {
   }
 
   const handleButtonClick = () => {
-    if (buttonText === 'Attempt') {
-      onAttemptClick(quiz)
-    } else if (buttonText === 'Review') {
+    const normalized = buttonText.toLowerCase()
+    if (normalized.includes('review')) {
       onReviewClick(quiz)
+      return
     }
+
+    if (buttonText === 'No Attempts Left') {
+      return
+    }
+
+    onAttemptClick(quiz)
   }
 
   return (
@@ -92,10 +100,24 @@ export default function QuizCard(props) {
       {/* Button */}
       <button
         onClick={handleButtonClick}
-        className="w-full rounded-lg bg-amber-700 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-amber-800"
+        disabled={buttonText === 'No Attempts Left'}
+        className={`w-full rounded-lg px-4 py-3 text-sm font-semibold transition-colors ${
+          buttonText === 'No Attempts Left'
+            ? 'cursor-not-allowed bg-gray-200 text-gray-500'
+            : 'bg-amber-700 text-white hover:bg-amber-800'
+        }`}
       >
         {buttonText}
       </button>
+
+      {secondaryButtonText ? (
+        <button
+          onClick={() => onSecondaryClick(quiz)}
+          className="mt-3 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+        >
+          {secondaryButtonText}
+        </button>
+      ) : null}
     </div>
   )
 }

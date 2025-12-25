@@ -13,10 +13,13 @@ export default function QuizPage() {
   const courseId = params.courseId
   const router = useRouter()
   const { createQuizAttemptMutation } = useAttemptQuizMutation({
-    successAction: () => {
+    successAction: (data) => {
       setIsModalOpen(false)
+      const attemptId = data?.data?.id
       router.push(
-        `/dashboard/course/${courseId}/quiz/${selectedQuiz.id}/attempt`
+        `/dashboard/course/${courseId}/quiz/${selectedQuiz.id}/attempt${
+          attemptId ? `?attemptId=${attemptId}` : ''
+        }`
       )
     },
   })
@@ -40,10 +43,15 @@ export default function QuizPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedQuiz, setSelectedQuiz] = useState(null)
 
-  console.log('quizzes:', quizzes)
-
   // 1. Handler saat tombol "Attempt" diklik (Membuka Modal)
   const handleAttemptClick = (quiz) => {
+    if (quiz?.active_attempt_id) {
+      router.push(
+        `/dashboard/course/${courseId}/quiz/${quiz.id}/attempt?attemptId=${quiz.active_attempt_id}`
+      )
+      return
+    }
+
     setSelectedQuiz(quiz)
     setIsModalOpen(true)
   }
@@ -80,7 +88,10 @@ export default function QuizPage() {
           <p>No quizzes available.</p>
         ) : (
           quizzes.map((quiz) => {
-            console.log(quiz)
+            const attempts = quiz.quiz_attempts || []
+            const hasFinishedAttempt = attempts.some(
+              (attempt) => attempt.status === 'FINISHED'
+            )
             return (
               <QuizCard
                 key={quiz.id}
@@ -102,19 +113,20 @@ export default function QuizPage() {
                 }
                 buttonText={
                   quiz.active_attempt_id
-                    ? 'Continue'
-                    : quiz.max_attempts > 0 && !quiz.is_attempted
-                      ? 'Attempt'
-                      : quiz.is_attempted &&
-                          quiz.max_attempts < quiz.quiz_attempts.length
-                        ? 'Re-attempt'
-                        : quiz.show_review
-                          ? 'Review'
-                          : 'No Attempts Left'
+                    ? 'Continue Attempt Quiz'
+                    : attempts.length === 0
+                      ? 'Attempt Quiz'
+                      : attempts.length < quiz.max_attempt
+                        ? 'Re-attempt Quiz'
+                        : 'No Attempts Left'
+                }
+                secondaryButtonText={
+                  hasFinishedAttempt ? 'Review Quiz' : undefined
                 }
                 // Passing handlers
                 onAttemptClick={handleAttemptClick}
                 onReviewClick={handleReviewClick}
+                onSecondaryClick={handleReviewClick}
               />
             )
           })

@@ -5,6 +5,7 @@ export default function StartAttemptModal({
   onClose,
   onConfirm,
   quizTitle,
+  isLoading = false,
 }) {
   if (!isOpen) return null
 
@@ -44,12 +45,14 @@ export default function StartAttemptModal({
         <div className="flex gap-4">
           <button
             onClick={onConfirm}
+            disabled={isLoading}
             className="flex-1 rounded-lg bg-amber-700 px-4 py-3 font-semibold text-white transition-colors hover:bg-amber-800"
           >
-            Attempt
+            {isLoading ? 'Starting...' : 'Start Attempt'}
           </button>
           <button
             onClick={onClose}
+            disabled={isLoading}
             className="flex-1 rounded-lg bg-red-600 px-4 py-3 font-semibold text-white transition-colors hover:bg-red-700"
           >
             Cancel

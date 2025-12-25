@@ -10,6 +10,7 @@ import {
   deleteQuizQuestionAction,
   getAllActiveQuizAction,
   getAllQuizAction,
+  createAttemptQuizAction,
 } from '@/actions/quiz.action'
 import { useMemo } from 'react'
 
@@ -265,4 +266,31 @@ export function useDeleteQuizQuestionMutation({ successAction }) {
   })
 
   return { deleteQuizQuestionMutation }
+}
+
+export function useAttemptQuizMutation({ successAction }) {
+  const createQuizAttemptMutation = useMutation({
+    mutationFn: (data) => createAttemptQuizAction({ body: data.payload }),
+    onSuccess: (data) => {
+      if (data?.code === 201) {
+        successAction()
+        toast.success(data?.message)
+      } else {
+        toast.error('Quiz attempt failed to create!', {
+          description: data?.message
+            ? data.message
+            : 'Unexpected error occurred',
+        })
+      }
+    },
+    onError: (error) => {
+      toast.error('Something went wrong!', {
+        description: error?.message
+          ? error.message
+          : 'Unexpected error occurred',
+      })
+    },
+  })
+
+  return { createQuizAttemptMutation }
 }

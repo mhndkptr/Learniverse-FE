@@ -38,6 +38,15 @@ export async function createQuizAction({ body }) {
   }
 }
 
+export async function createAttemptQuizAction({ body }) {
+  try {
+    const res = await request.post('/quiz/attempt', body)
+    return res.data
+  } catch (error) {
+    return handleAxiosError(error)
+  }
+}
+
 export async function updateQuizAction({ id, body }) {
   try {
     const res = await request.patch(`/quiz/${id}`, body)

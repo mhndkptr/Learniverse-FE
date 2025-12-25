@@ -4,11 +4,12 @@ export default function QuizCard(props) {
   const {
     title = 'Calculus',
     date = '20 November 2025',
-    grades = '-',
+    grade = '-',
     description = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Tempus bibendum nisl duis mauris mauris consuleo.',
     status = 'not-yet',
     buttonText = 'Attempt',
     quiz = null,
+
     onAttemptClick = () => {},
     onReviewClick = () => {},
   } = props
@@ -79,7 +80,7 @@ export default function QuizCard(props) {
         </div>
         <div>
           <p className="mb-1 text-xs font-medium text-gray-500">Grades</p>
-          <p className="font-medium text-gray-900">{grades}</p>
+          <p className="font-medium text-gray-900">{grade}</p>
         </div>
       </div>
 

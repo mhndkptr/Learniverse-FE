@@ -21,7 +21,7 @@ export default function MentorSearch({ onSearch }) {
       <input
         type="text"
         // Teks placeholder disesuaikan dengan perbaikan backend sebelumnya
-        placeholder="Cari mentor berdasarkan nama atau email..."
+        placeholder="Search mentor by name or email..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         className="bg-muted border-border text-foreground placeholder-muted-foreground focus:ring-ring w-full rounded-full border px-4 py-3 pr-10 pl-4 transition-all focus:ring-2 focus:outline-none"

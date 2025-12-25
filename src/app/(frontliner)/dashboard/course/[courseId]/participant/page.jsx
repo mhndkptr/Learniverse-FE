@@ -60,7 +60,7 @@ export default function CourseParticipantPage() {
             Course Participants
           </h2>
           <p className="text-muted-foreground text-sm">
-            Daftar semua peserta yang terdaftar di course ini.
+            List of all participants enrolled in this course.
           </p>
         </div>
         <div className="text-muted-foreground text-sm">
@@ -72,7 +72,7 @@ export default function CourseParticipantPage() {
         <div className="relative w-full max-w-sm">
           <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <Input
-            placeholder="Cari nama atau email..."
+            placeholder="Search name or email..."
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             className="pl-9"

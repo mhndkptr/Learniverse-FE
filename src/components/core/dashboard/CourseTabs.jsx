@@ -7,8 +7,11 @@ export default function CourseTabs({ tabs, courseId }) {
   const pathname = usePathname()
   const activeTab =
     tabs.find(
-      (tab) => `/dashboard/course/${courseId}/${tab.path}` === pathname
-    ) || tabs[0]
+      (tab) =>
+        // Pastikan tab.path ada isinya, lalu cek startsWith
+        tab.path &&
+        pathname.startsWith(`/dashboard/course/${courseId}/${tab.path}`)
+    ) || tabs[0] // Jika tidak ada yang cocok (misal di halaman root), fallback ke Overview (index 0)
 
   return (
     <div className="mt-6 border-b">

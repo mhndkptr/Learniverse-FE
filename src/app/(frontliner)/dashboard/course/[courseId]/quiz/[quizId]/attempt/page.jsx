@@ -268,10 +268,7 @@ export default function QuizAttemptPage() {
   )
 
   return (
-    <div
-      className="min-h-screen bg-gray-50 p-6"
-      style={{ paddingTop: '120px' }}
-    >
+    <div className="min-h-screen p-6">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 lg:grid-cols-4">
         <div className="lg:col-span-3">
           <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">

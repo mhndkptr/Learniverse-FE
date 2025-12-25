@@ -87,12 +87,12 @@ export default function MentorRegistrationForm() {
     e.preventDefault()
 
     if (!user?.id) {
-      toast.error('Gagal: User ID tidak ditemukan. Mohon login ulang.')
+      toast.error('Error: User ID not found. Please log in again.')
       return
     }
 
     if (isLoadingMentorApps) {
-      toast.error('Sedang memuat riwayat pendaftaran, coba lagi sebentar.')
+      toast.error('Loading registration history, please try again shortly.')
       return
     }
 
@@ -101,13 +101,15 @@ export default function MentorRegistrationForm() {
     )
 
     if (alreadyAppliedSameCourse) {
-      toast.error('Anda sudah terdaftar/menunggu review untuk course ini.')
+      toast.error(
+        'You have already applied or are awaiting review for this course.'
+      )
       return
     }
 
     if (isFormInvalid) {
       toast.error(
-        'Gagal: Mohon lengkapi semua field. Pastikan teks minimal 10 karakter dan URL valid (diawali http/https).'
+        'Failed: Please complete all fields. Ensure text is at least 10 characters and URLs are valid (starting with http/https).'
       )
       return
     }

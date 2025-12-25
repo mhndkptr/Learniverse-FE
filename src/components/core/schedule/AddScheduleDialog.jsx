@@ -53,15 +53,13 @@ export default function AddScheduleDialog({
   const handleSave = () => {
     // 1. Validasi Field Kosong
     if (!date || !startTime || !endTime || !title || !courseId) {
-      toast.warning('Mohon lengkapi semua data jadwal.')
+      toast.warning('Please complete all schedule data.')
       return
     }
 
     // 2. Validasi Waktu
     if (endTime <= startTime) {
-      toast.error(
-        'Waktu selesai tidak boleh sebelum atau sama dengan waktu mulai.'
-      )
+      toast.error('End time cannot be before or the same as start time.')
       return
     }
 

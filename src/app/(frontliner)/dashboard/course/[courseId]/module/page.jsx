@@ -34,7 +34,7 @@ export default function ModulesPage() {
           <Search className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform" />
           <input
             type="text"
-            placeholder="Cari modul..."
+            placeholder="Search module..."
             className="border-border bg-card text-foreground placeholder-muted-foreground focus:ring-primary w-full rounded-lg border py-2 pr-4 pl-10 focus:ring-2 focus:outline-none"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}

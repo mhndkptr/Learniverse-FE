@@ -7,6 +7,7 @@ import ResultSummaryCard from '@/components/core/quiz/ResultSummaryCard'
 import QuizNavigation from '@/components/core/quiz/QuizNavigation'
 import { useAuth } from '@/contexts/auth.context'
 import { useGetQuizAttemptById, useGetQuizAttempts } from '@/hooks/quiz.hook'
+import QuizReviewNavigation from '@/components/core/quiz/QuizReviewNavigation'
 
 export default function QuizReviewPage() {
   const router = useRouter()
@@ -27,7 +28,7 @@ export default function QuizReviewPage() {
             quiz_id: quizId,
             user_id: user.id,
           },
-          include_relation: ['quiz'],
+          include_relation: ['quiz', 'quiz_attempt_question_answers'],
         }
       : undefined,
     enabled: !!user && !!quizId,
@@ -214,7 +215,7 @@ export default function QuizReviewPage() {
   const userAnswerId = currentQuestion ? answerMap[currentQuestion.id] : null
   const optionList = currentQuestion?.quiz_option_answers || []
   const userAnswerIndex = optionList.findIndex((opt) => opt.id === userAnswerId)
-  const correctAnswerIndex = optionList.findIndex((opt) => opt.is_correct)
+  const correctAnswerIndex = optionList.filter((opt) => opt.is_correct)
 
   let status = 'unanswered'
   if (userAnswerIndex !== -1 && userAnswerIndex !== null) {
@@ -235,10 +236,10 @@ export default function QuizReviewPage() {
                 questionNumber={currentQuestionIndex + 1}
                 totalQuestions={questions.length}
                 questionText={currentQuestion.question}
-                options={optionList.map((opt) => opt.answer)}
+                options={optionList}
                 isReview={true}
                 userAnswer={userAnswerIndex}
-                correctAnswer={correctAnswerIndex}
+                correctAnswers={[...correctAnswerIndex]}
                 status={status}
                 selectedOption={userAnswerIndex}
                 onSelectOption={() => {}}
@@ -314,29 +315,12 @@ export default function QuizReviewPage() {
               </div>
             </div>
 
-            <QuizNavigation
-              totalQuestions={questions.length}
+            <QuizReviewNavigation
+              answers={attempt.quiz_attempt_question_answers}
+              questions={attempt.quiz.quiz_questions}
               currentQuestionIndex={currentQuestionIndex}
-              answers={Object.keys(answerMap).reduce((acc, questionId) => {
-                const questionIndex = questions.findIndex(
-                  (q) => q.id === questionId
-                )
-                if (questionIndex >= 0) {
-                  acc[questionIndex] = 0
-                }
-                return acc
-              }, {})}
               onNavigate={handleNavigateToQuestion}
-              isReview={true}
-              correctAnswers={questions.reduce((acc, question, index) => {
-                const correctIndex = (
-                  question.quiz_option_answers || []
-                ).findIndex((opt) => opt.is_correct)
-                if (correctIndex >= 0) {
-                  acc[index] = correctIndex
-                }
-                return acc
-              }, {})}
+              quizAttemptId={attempt.id}
             />
 
             <button

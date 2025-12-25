@@ -14,6 +14,8 @@ export default function QuizCard(props) {
     onAttemptClick = () => {},
     onReviewClick = () => {},
     onSecondaryClick = () => {},
+    onPreviewClick = () => {},
+    isMentor = false,
   } = props
 
   const getStatusBadge = () => {
@@ -43,24 +45,32 @@ export default function QuizCard(props) {
           <span className="text-sm font-semibold">In Progress</span>
         </div>
       )
+    } else if (isMentor) {
+      return <></>
+    } else {
+      return (
+        <div className="flex items-center gap-2">
+          <svg
+            className="h-6 w-6 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <circle cx="12" cy="12" r="10" strokeWidth={2} />
+          </svg>
+          <span className="text-sm text-gray-600">Not yet</span>
+        </div>
+      )
     }
-    return (
-      <div className="flex items-center gap-2">
-        <svg
-          className="h-6 w-6 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <circle cx="12" cy="12" r="10" strokeWidth={2} />
-        </svg>
-        <span className="text-sm text-gray-600">Not yet</span>
-      </div>
-    )
   }
 
   const handleButtonClick = () => {
     const normalized = buttonText.toLowerCase()
+    if (normalized.includes('preview')) {
+      onPreviewClick(quiz)
+      return
+    }
+
     if (normalized.includes('review')) {
       onReviewClick(quiz)
       return
@@ -81,14 +91,21 @@ export default function QuizCard(props) {
 
       <div className="mb-4">{getStatusBadge()}</div>
 
+      <div className="mb-4">
+        <p className="mb-1 text-xs font-medium text-gray-500">Date</p>
+        <p className="text-sm font-medium text-gray-900">{date}</p>
+      </div>
+
       <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
         <div>
-          <p className="mb-1 text-xs font-medium text-gray-500">Date</p>
-          <p className="font-medium text-gray-900">{date}</p>
+          <p className="mb-1 text-xs font-medium text-gray-500">Grades</p>
+          <p className="text-sm font-medium text-gray-900">{grade}</p>
         </div>
         <div>
-          <p className="mb-1 text-xs font-medium text-gray-500">Grades</p>
-          <p className="font-medium text-gray-900">{grade}</p>
+          <p className="mb-1 text-xs font-medium text-gray-500">Max Attempt</p>
+          <p className="text-sm font-medium text-gray-900">
+            {quiz?.max_attempt}
+          </p>
         </div>
       </div>
 

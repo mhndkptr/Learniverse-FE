@@ -50,6 +50,15 @@ export async function createCourseTransactionAction({ body }) {
   }
 }
 
+export async function checkCourseEnrollmentAction({ id }) {
+  try {
+    const res = await request.post(`/course/${id}/check-enrollment`)
+    return res.data
+  } catch (error) {
+    return handleAxiosError(error)
+  }
+}
+
 /* =========================================================
    BACKOFFICE / ADMIN SECTION 
    ========================================================= */

@@ -7,6 +7,7 @@ export default function QuizNavigation({
   onNavigate,
   isReview = false,
   correctAnswers = {},
+  isPreview = false,
 }) {
   return (
     // UBAHAN: Hapus 'sticky top-24 h-fit' dari sini.
@@ -105,7 +106,9 @@ export default function QuizNavigation({
       </div>
 
       <div className="mt-6 space-y-2 border-t border-gray-100 pt-4">
-        {isReview ? (
+        {isPreview ? (
+          <></>
+        ) : isReview ? (
           <>
             <div className="flex items-center gap-2">
               <div className="h-4 w-4 rounded bg-green-600"></div>

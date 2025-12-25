@@ -50,7 +50,9 @@ export default function ScheduleEventDialog({
                       {ev.startTime}–{ev.endTime} — {ev.title}
                     </p>
                     {ev.course && (
-                      <p className="text-xs text-gray-600">Course: {ev.course}</p>
+                      <p className="text-xs text-gray-600">
+                        Course: {ev.course}
+                      </p>
                     )}
                   </div>
                   {canEdit && (

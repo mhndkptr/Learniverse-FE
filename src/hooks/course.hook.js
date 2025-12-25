@@ -13,6 +13,7 @@ import {
   getCourseByIdAdminAction,
   deleteCourseAction,
   getAllEnrolledCourseAction,
+  getCourseByIdDashboardAction,
 } from '@/actions/course.action'
 
 /* =========================================================
@@ -77,6 +78,20 @@ export function useGetCourseById({ courseId }) {
   const { data, isLoading, isPending, refetch } = useQuery({
     queryKey: ['getCourseById', courseId],
     queryFn: () => getCourseByIdAction({ id: courseId }),
+    enabled: !!courseId,
+    retry: false,
+    refetchOnWindowFocus: false,
+    onError: (error) => toast.error(error.message ?? 'Failed to load details'),
+  })
+
+  const course = useMemo(() => (data?.code === 200 ? data.data : null), [data])
+  return { course, isLoading, isPending, refetch }
+}
+
+export function useGetCourseByIdDashboard({ courseId }) {
+  const { data, isLoading, isPending, refetch } = useQuery({
+    queryKey: ['getCourseByIdDashboard', courseId],
+    queryFn: () => getCourseByIdDashboardAction({ id: courseId }),
     enabled: !!courseId,
     retry: false,
     refetchOnWindowFocus: false,

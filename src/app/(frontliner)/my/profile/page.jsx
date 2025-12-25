@@ -1,4 +1,4 @@
- 'use client'
+'use client'
 
 import { useAuth } from '@/contexts/auth.context'
 import ProfileLayout from '@/components/core/profile/ProfileLayout'
@@ -64,7 +64,11 @@ export default function ProfilePage() {
 
           <div className="space-y-3">
             {fields.map((item) => (
-              <ReadonlyField key={item.label} label={item.label} value={item.value} />
+              <ReadonlyField
+                key={item.label}
+                label={item.label}
+                value={item.value}
+              />
             ))}
           </div>
         </div>

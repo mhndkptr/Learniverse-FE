@@ -1,10 +1,10 @@
-import CourseManagePageComponent from './CourseManagePageComponent'
+import { redirect } from 'next/navigation'
 
 export const metadata = {
   title: 'Manage Course | Backoffice',
 }
 
 export default async function BackofficeCourseManagePage({ params }) {
-  const id = (await params).id
-  return <CourseManagePageComponent id={id} />
+  const { id } = await params
+  redirect(`/backoffice/course/${id}/manage/general`)
 }

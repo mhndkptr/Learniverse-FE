@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 export default function QuestionCard({
   questionNumber,
@@ -20,27 +20,33 @@ export default function QuestionCard({
   return (
     <div className="w-full">
       {/* --- Bagian Header, Timer, Progress Bar (SAMA SEPERTI SEBELUMNYA) --- */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-gray-700 font-medium">📋</span>
-          <span className="text-gray-700 font-semibold">General Knowledge Quiz</span>
+          <span className="font-medium text-gray-700">📋</span>
+          <span className="font-semibold text-gray-700">
+            General Knowledge Quiz
+          </span>
         </div>
         {!isReview && (
           <div className="flex items-center gap-2">
-            <span className="text-amber-800 font-semibold">Time Left: {timeLeftString}</span>
+            <span className="font-semibold text-amber-800">
+              Time Left: {timeLeftString}
+            </span>
             <span className="text-amber-800">⏱️</span>
           </div>
         )}
       </div>
 
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-2">
+        <div className="mb-2 flex items-center justify-between">
           <span className="text-sm text-gray-700">
             Question {questionNumber} of {totalQuestions}
           </span>
-          <span className="text-sm font-semibold text-amber-800">{progressPercentage.toFixed(0)}%</span>
+          <span className="text-sm font-semibold text-amber-800">
+            {progressPercentage.toFixed(0)}%
+          </span>
         </div>
-        <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
           <div
             className="h-full bg-amber-800 transition-all duration-300"
             style={{ width: `${progressPercentage}%` }}
@@ -54,7 +60,11 @@ export default function QuestionCard({
 
       {image && (
         <div className="mb-6">
-          <img src={image || "/placeholder.svg"} alt="Question" className="max-w-full h-auto rounded-lg" />
+          <img
+            src={image || '/placeholder.svg'}
+            alt="Question"
+            className="h-auto max-w-full rounded-lg"
+          />
         </div>
       )}
 
@@ -63,30 +73,43 @@ export default function QuestionCard({
         {options.map((option, index) => {
           const isSelected = selectedOption === index || userAnswer === index
           const isCorrect = correctAnswer === index
-          const isWrongAnswer = userAnswer === index && status === "false"
+          const isWrongAnswer = userAnswer === index && status === 'false'
 
           return (
             <label
               key={index}
-              onClick={() => !isReview && onSelectOption(index)} 
-              className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                isSelected ? "border-amber-800 bg-amber-50" : "border-gray-200 bg-white hover:border-gray-300"
-              } ${isReview && isWrongAnswer ? "border-red-500 bg-red-50" : ""}`}
+              onClick={() => !isReview && onSelectOption(index)}
+              className={`flex cursor-pointer items-center rounded-lg border-2 p-4 transition-all ${
+                isSelected
+                  ? 'border-amber-800 bg-amber-50'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              } ${isReview && isWrongAnswer ? 'border-red-500 bg-red-50' : ''}`}
             >
               <div
-                className={`w-5 h-5 rounded-full border-2 mr-4 flex items-center justify-center transition-all ${
-                  isSelected ? "border-amber-800 bg-amber-800" : "border-gray-300 bg-white"
+                className={`mr-4 flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${
+                  isSelected
+                    ? 'border-amber-800 bg-amber-800'
+                    : 'border-gray-300 bg-white'
                 }`}
               >
-                {isSelected && <div className="w-2 h-2 bg-white rounded-full"></div>}
+                {isSelected && (
+                  <div className="h-2 w-2 rounded-full bg-white"></div>
+                )}
               </div>
-              <span className="text-gray-900 flex-1 font-medium">{option}</span>
+              <span className="flex-1 font-medium text-gray-900">{option}</span>
               {/* Icon Review Check/Cross (Sama seperti sebelumnya) */}
-              {isReview && isSelected && status === "correct" && <span className="text-green-600 text-lg">✓</span>}
-              {isReview && isWrongAnswer && <span className="text-red-600 text-lg">✗</span>}
-              {isReview && isCorrect && status === "false" && isSelected === false && (
-                <span className="text-green-600 text-lg">✓</span>
+              {isReview && isSelected && status === 'correct' && (
+                <span className="text-lg text-green-600">✓</span>
               )}
+              {isReview && isWrongAnswer && (
+                <span className="text-lg text-red-600">✗</span>
+              )}
+              {isReview &&
+                isCorrect &&
+                status === 'false' &&
+                isSelected === false && (
+                  <span className="text-lg text-green-600">✓</span>
+                )}
             </label>
           )
         })}
@@ -96,15 +119,26 @@ export default function QuestionCard({
       {/* Muncul hanya jika bukan review DAN user sudah memilih jawaban */}
       {!isReview && selectedOption !== undefined && (
         <div className="mt-3 flex justify-end">
-          <button 
+          <button
             onClick={(e) => {
-              e.stopPropagation(); // Mencegah bubbling event
-              onClearSelection();
+              e.stopPropagation() // Mencegah bubbling event
+              onClearSelection()
             }}
-            className="text-sm text-gray-400 hover:text-red-500 hover:underline transition-colors flex items-center gap-1"
+            className="flex items-center gap-1 text-sm text-gray-400 transition-colors hover:text-red-500 hover:underline"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
             </svg>
             Clear selection
           </button>

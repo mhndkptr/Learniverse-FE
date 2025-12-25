@@ -56,7 +56,7 @@ export default function BackofficeModuleAddPage() {
         <h1 className="text-2xl font-bold">Add New Module</h1>
       </div>
 
-      <div className="rounded-lg border bg-card p-6 shadow-sm">
+      <div className="bg-card rounded-lg border p-6 shadow-sm">
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <Label htmlFor="module-title">Title</Label>
@@ -83,7 +83,7 @@ export default function BackofficeModuleAddPage() {
                 }))
               }
               placeholder="Enter module description"
-              className="min-h-[160px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="border-input focus-visible:ring-ring min-h-[160px] w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             />
           </div>
 
@@ -99,13 +99,13 @@ export default function BackofficeModuleAddPage() {
                   file: e.target.files?.[0] || null,
                 }))
               }
-              className="block w-full text-sm file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-muted file:px-4 file:py-2 file:text-sm file:font-medium file:text-foreground"
+              className="file:bg-muted file:text-foreground block w-full text-sm file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:px-4 file:py-2 file:text-sm file:font-medium"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Upload a file (PDF, DOCX, etc.) for this module. Max size: 10MB
             </p>
             {formValues.file && (
-              <p className="text-xs text-foreground">
+              <p className="text-foreground text-xs">
                 Selected file: {formValues.file.name}
               </p>
             )}
@@ -135,4 +135,3 @@ export default function BackofficeModuleAddPage() {
     </div>
   )
 }
-

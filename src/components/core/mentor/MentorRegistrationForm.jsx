@@ -97,9 +97,7 @@ export default function MentorRegistrationForm() {
     }
 
     const alreadyAppliedSameCourse = myMentorApplications.some(
-      (m) =>
-        m.course_id === formData.courseId &&
-        m.status !== 'REJECTED' // boleh daftar lagi jika sebelumnya ditolak
+      (m) => m.course_id === formData.courseId && m.status !== 'REJECTED' // boleh daftar lagi jika sebelumnya ditolak
     )
 
     if (alreadyAppliedSameCourse) {

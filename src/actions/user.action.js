@@ -13,7 +13,8 @@ export async function getAllUserAction(params) {
 
 export async function updateUserAction({ id, body }) {
   try {
-    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData
+    const isFormData =
+      typeof FormData !== 'undefined' && body instanceof FormData
     const res = await request.patch(`/user/${id}`, body, {
       headers: isFormData
         ? {

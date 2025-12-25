@@ -11,7 +11,7 @@ export default function ProfileAvatar({ name = 'User', src }) {
     .slice(0, 2)
 
   return (
-    <div className="relative flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 shadow bg-gray-100 text-3xl font-bold text-gray-600">
+    <div className="relative flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-gray-100 text-3xl font-bold text-gray-600 shadow">
       {src ? (
         <Image src={src} alt={name} fill className="object-cover" />
       ) : (

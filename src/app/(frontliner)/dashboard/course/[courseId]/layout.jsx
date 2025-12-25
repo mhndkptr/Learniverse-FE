@@ -1,9 +1,9 @@
 'use client'
 
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Settings } from 'lucide-react'
 import CourseHeader from '@/components/core/dashboard/CourseHeader'
 import CourseTabs from '@/components/core/dashboard/CourseTabs'
-import { useGetCourseById } from '@/hooks/course.hook'
+import { useGetCourseByIdDashboard } from '@/hooks/course.hook'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth.context'
 import { Button } from '@/components/ui/button'
@@ -36,7 +36,7 @@ export default function DashboardCourseLayout({ children }) {
   const params = useParams()
   const courseId = params.courseId
   const { user, isAuthLoading } = useAuth()
-  const { course, isLoading, isPending } = useGetCourseById({
+  const { course, isLoading, isPending } = useGetCourseByIdDashboard({
     courseId: courseId,
   })
 
@@ -57,6 +57,7 @@ export default function DashboardCourseLayout({ children }) {
       mentor.status === 'ACCEPTED'
   )
   const canAccess = user?.role === 'ADMIN' || Boolean(isEnrolled || isMentor)
+  const canManage = user?.role === 'ADMIN' || Boolean(isMentor)
 
   if (!canAccess) {
     return (
@@ -105,7 +106,20 @@ export default function DashboardCourseLayout({ children }) {
         <CourseHeader course={course} />
 
         {/* Tabs Navigation */}
-        <CourseTabs tabs={tabs} courseId={courseId} />
+        <div className="flex items-center justify-between gap-4">
+          <CourseTabs tabs={tabs} courseId={courseId} />
+          {canManage && (
+            <Button
+              className="bg-[#0E1B50] text-white hover:bg-blue-900"
+              onClick={() =>
+                router.push(`/backoffice/course/${courseId}/manage`)
+              }
+            >
+              <Settings className="mr-2 size-4" />
+              Manage This Course
+            </Button>
+          )}
+        </div>
 
         {/* Content Area */}
         <div className="py-4 md:py-6">{children}</div>

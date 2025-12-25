@@ -66,7 +66,7 @@ export default function MentorHistoryPage() {
           <div className="space-y-4">
             {mentors.length === 0 ? (
               <div className="border-border rounded-lg border bg-white py-12 text-center">
-                <AlertCircle className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                <AlertCircle className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
                 <p className="text-muted-foreground">
                   You have not applied as a mentor yet.
                 </p>

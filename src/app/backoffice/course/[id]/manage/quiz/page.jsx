@@ -1,222 +1,156 @@
 'use client'
 
-import BaseTable from '@/components/_shared/BaseTable'
-import PaginationControls from '@/components/layout/pagination/PaginationControls'
+import { useMemo, useState } from 'react'
+import Link from 'next/link'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useBackofficeBreadcrumb } from '@/contexts/backoffice-breadcrumb.context'
-import { useDebounce } from '@/hooks/use-debounce.hook'
-import { Pencil, Plus, Search, Trash2, Eye, TriangleAlert } from 'lucide-react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
+import BaseTable from '@/components/_shared/BaseTable'
+import ConfirmDialogDelete from '@/components/core/backoffice/course/ConfirmDialogDelete'
+import { useDeleteQuizMutation } from '@/hooks/quiz.hook'
+import { useCourseManage } from '../_components/course-manage.context'
+import SortDropdown from '../_components/SortDropdown'
+import sortData from '../_components/sortData'
 
-// --- DATA DEFAULT (Untuk pengguna baru) ---
-const DEFAULT_QUIZZES = [
-  {
-    id: 'quiz-1',
-    title: 'Simulasi Ujian Kalkulus CLO1',
-    course_name: 'Calculus',
-    exam_date: '30/02/2025, 08:00',
-    due_date: '30/02/2025, 10:00',
-    status: 'PUBLISHED',
-  },
-  {
-    id: 'quiz-2',
-    title: 'Simulasi Ujian Kalkulus CLO2',
-    course_name: 'Calculus',
-    exam_date: '30/02/2025, 08:00',
-    due_date: '30/02/2025, 10:00',
-    status: 'DRAFT',
-  },
-]
+export default function BackofficeCourseManageQuizPage() {
+  const { course, courseId, refetch } = useCourseManage()
 
-export default function BackofficeQuizPage() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  
-  // --- STATE ---
-  // 1. Init Search kosong dulu untuk hindari Hydration Error
-  const [searchTerm, setSearchTerm] = useState('')
-  
-  const debouncedSearchTerm = useDebounce(searchTerm, 500)
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'none' })
-  const [currentPage, setCurrentPage] = useState(1)
-  
-  // 2. State Data & Modal
-  const [allQuizzes, setAllQuizzes] = useState([]) 
-  const [showDeleteModal, setShowDeleteModal] = useState({ data: null, status: false })
+  const [quizSort, setQuizSort] = useState({
+    key: 'created_at',
+    direction: 'desc',
+  })
+  const [showDelete, setShowDelete] = useState({
+    status: false,
+    data: null,
+    mutation: null,
+  })
+  const [isDeleting, setIsDeleting] = useState(false)
 
-  // --- USE EFFECTS ---
+  const { deleteQuizMutation } = useDeleteQuizMutation({
+    successAction: () => {
+      setShowDelete({ status: false, data: null, mutation: null })
+      refetch()
+    },
+  })
 
-  // A. Sync Search Params (Client Side Only)
-  useEffect(() => {
-    const currentSearch = searchParams.get('search')
-    if (currentSearch) {
-      setSearchTerm(currentSearch)
-    }
-  }, [searchParams])
+  const processedQuizzes = useMemo(
+    () => sortData(course?.quizzes || [], quizSort),
+    [course?.quizzes, quizSort]
+  )
 
-  // B. Load Data LocalStorage
-  useEffect(() => {
-    const storedData = localStorage.getItem('quizzes')
-    if (storedData) {
-        setAllQuizzes(JSON.parse(storedData))
-    } else {
-        localStorage.setItem('quizzes', JSON.stringify(DEFAULT_QUIZZES))
-        setAllQuizzes(DEFAULT_QUIZZES)
-    }
-  }, [])
-
-  // C. Set Breadcrumb
-  const { setBreadcrumb } = useBackofficeBreadcrumb()
-  useEffect(() => {
-    setBreadcrumb([
-      { label: 'Dashboard', href: '/backoffice' },
-      { label: 'Quiz', href: '/backoffice/quiz' },
-    ])
-  }, [setBreadcrumb])
-
-  // --- LOGIC ---
-
-  const filteredQuizzes = useMemo(() => {
-    return allQuizzes.filter(q => 
-      q.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-    )
-  }, [debouncedSearchTerm, allQuizzes])
-
-  // --- HANDLERS ---
-
-  const handleAddQuiz = () => {
-    router.push('/backoffice/quiz/create')
-  }
-
-  const handleDeleteConfirm = () => {
-    const idToDelete = showDeleteModal.data?.id
-    if (!idToDelete) return
-
-    // Hapus dari State & LocalStorage
-    const newQuizList = allQuizzes.filter(q => q.id !== idToDelete)
-    setAllQuizzes(newQuizList)
-    localStorage.setItem('quizzes', JSON.stringify(newQuizList))
-
-    setShowDeleteModal({ data: null, status: false })
-  }
-
-  const handleRowAction = (action, row) => {
-    // Ambil ID dari row asli
-    const rowData = row.original || row
-    const quizId = rowData.id
-
-    switch (action) {
-      case 'edit':
-        if (quizId) {
-            router.push(`/backoffice/quiz/${quizId}/edit`)
-        } else {
-            alert("Error: Quiz ID not found")
-        }
-        break
-      case 'delete':
-        setShowDeleteModal({ data: rowData, status: true })
-        break
-      default:
-        break
-    }
-  }
-
-  const columns = useMemo(() => [
-      { key: 'title', header: 'TITLE', sortable: true },
-      { key: 'course_name', header: 'COURSE NAME', sortable: true },
-      { key: 'exam_date', header: 'EXAM DATE', sortable: true },
-      { key: 'due_date', header: 'DUE DATE', sortable: true },
-      { 
-        key: 'status', header: 'STATUS', sortable: true,
-        render: (row) => (
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${
-            row.status === 'PUBLISHED' ? 'bg-green-600' : 'bg-amber-600'
-          }`}>
-            {row.status}
-          </span>
-        )
+  const quizColumns = useMemo(
+    () => [
+      {
+        key: 'title',
+        header: 'Quiz Title',
+        className: 'w-[50%] min-w-[300px]',
       },
       {
-        key: 'actions', header: 'ACTION', sortable: false,
-        actions: [
-          { label: 'Publish', action: 'toggle_status', icon: Eye },
-          { label: 'Edit', action: 'edit', icon: Pencil },
-          { label: 'Delete', action: 'delete', icon: Trash2 },
-        ],
+        key: 'status',
+        header: 'Status',
+        className: 'w-[100px]',
+        render: (row) => <Badge variant="outline">{row.status}</Badge>,
       },
-    ], [])
+      {
+        key: 'duration',
+        header: 'Duration (m)',
+        className: 'w-[150px] whitespace-nowrap',
+      },
+      {
+        key: 'actions',
+        header: 'Action',
+        className: 'w-[100px]',
+        render: (row) => (
+          <div className="flex gap-2">
+            <Link
+              href={`/backoffice/course/${courseId}/manage/quiz/${row.id}/edit`}
+            >
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-amber-600"
+              >
+                <Pencil className="size-4" />
+              </Button>
+            </Link>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 text-red-600"
+              onClick={() =>
+                setShowDelete({
+                  status: true,
+                  data: row,
+                  mutation: deleteQuizMutation,
+                })
+              }
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [courseId, deleteQuizMutation]
+  )
+
+  if (!course) return null
 
   return (
     <>
-      <div className="flex flex-col gap-4 md:gap-6">
-        <h1 className="text-2xl font-bold">Quiz Management</h1>
-
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="relative w-full max-w-sm">
-             <Label htmlFor="search" className="sr-only">Search</Label>
-             {/* Tambahkan suppressHydrationWarning untuk mengatasi error ekstensi browser */}
-             <Input 
-               value={searchTerm} 
-               onChange={(e) => setSearchTerm(e.target.value)} 
-               placeholder="Search Quiz..." 
-               className="py-2 pl-10" 
-               suppressHydrationWarning
-              />
-             <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 opacity-50" />
+      <div className="space-y-4">
+        <div className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm">
+          <div>
+            <h3 className="text-lg font-semibold">Quizzes</h3>
+            <p className="text-sm text-gray-500">Manage quizzes.</p>
           </div>
-          
-          <div className="flex gap-2">
-            <Button variant="default" onClick={handleAddQuiz}>
-                <Plus className="size-4 mr-2" /> Add Quiz
-            </Button>
+          <div className="flex items-center gap-3">
+            <SortDropdown
+              sortConfig={quizSort}
+              onSortChange={setQuizSort}
+              options={[
+                { value: 'title:asc', label: 'Title (A-Z)' },
+                { value: 'title:desc', label: 'Title (Z-A)' },
+                { value: 'status:asc', label: 'Status' },
+                { value: 'duration:asc', label: 'Duration' },
+                { value: 'created_at:desc', label: 'Newest' },
+                { value: 'created_at:asc', label: 'Oldest' },
+              ]}
+            />
+            <Link href={`/backoffice/course/${courseId}/manage/quiz/create`}>
+              <Button size="sm" variant="primary">
+                <Plus className="mr-2 size-4" /> Create Quiz
+              </Button>
+            </Link>
           </div>
         </div>
-
-        <BaseTable
-          data={filteredQuizzes}
-          columns={columns}
-          onRowAction={handleRowAction}
-          searchFields={['title']}
-          searchTerm={searchTerm}
-          serverSide={true}
-          sortConfig={sortConfig}
-          onSortChange={setSortConfig}
-        />
-        
-        <PaginationControls
-          totalItems={filteredQuizzes.length}
-          totalPages={1}
-          currentPage={currentPage}
-          itemsPerPage={10}
-          onPageChange={setCurrentPage}
-        />
+        <div className="rounded-lg border bg-white shadow-sm">
+          <BaseTable
+            data={processedQuizzes}
+            columns={quizColumns}
+            serverSide={true}
+            searchFields={['title']}
+            onRowAction={() => {}}
+            sortConfig={quizSort}
+            onSortChange={setQuizSort}
+          />
+        </div>
       </div>
 
-      {/* DELETE MODAL */}
-      {showDeleteModal.status && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-          <div 
-            className="absolute inset-0 backdrop-blur-sm transition-opacity"
-            style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
-            onClick={() => setShowDeleteModal({ data: null, status: false })}
-          />
-          <div className="relative z-10 bg-white rounded-xl p-8 max-w-sm w-full mx-4 shadow-2xl animate-in fade-in zoom-in duration-200 text-center">
-            <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-yellow-100 mb-6 border-4 border-white shadow-sm">
-              <TriangleAlert className="h-10 w-10 text-yellow-500" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Are You Sure?!</h3>
-            <p className="text-gray-500 text-sm font-medium mb-8">This will be permanently deleted!</p>
-            <div className="flex justify-center gap-4">
-              <button onClick={handleDeleteConfirm} className="px-6 py-2.5 bg-[#9F1239] hover:bg-[#881337] text-white font-semibold rounded-lg shadow-md transition-transform hover:scale-105">Delete</button>
-              <button onClick={() => setShowDeleteModal({ data: null, status: false })} className="px-6 py-2.5 bg-[#0F172A] hover:bg-[#1e293b] text-white font-semibold rounded-lg shadow-md transition-transform hover:scale-105">Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialogDelete
+        isOpen={showDelete.status}
+        onClose={() =>
+          setShowDelete({ status: false, data: null, mutation: null })
+        }
+        onConfirm={async () => {
+          setIsDeleting(true)
+          await showDelete.mutation.mutate({ id: showDelete?.data?.id })
+          setIsDeleting(false)
+          refetch()
+        }}
+        title="Delete Item"
+        isLoading={isDeleting}
+      />
     </>
   )
 }

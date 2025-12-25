@@ -13,7 +13,7 @@ import {
   useCreateScheduleMutation,
   useUpdateScheduleMutation,
 } from '@/hooks/schedule.hook'
-import { useGetCourseById } from '@/hooks/course.hook'
+import { useGetCourseByIdDashboard } from '@/hooks/course.hook'
 import { useAuth } from '@/contexts/auth.context'
 
 export default function ScheduleCoursePage() {
@@ -25,7 +25,7 @@ export default function ScheduleCoursePage() {
     course,
     isLoading: isLoadingCourse,
     refetch: refetchCourse,
-  } = useGetCourseById({
+  } = useGetCourseByIdDashboard({
     courseId,
   })
 

@@ -46,9 +46,11 @@ function CourseManageLayoutContent({ currentTab, children }) {
   })
   useEffect(() => {
     // Cek apakah user adalah mentor atau bukan
-    checkCourseEnrollmentMutation.mutate({
-      id: courseId,
-    })
+    if (courseId && user && !isAdmin) {
+      checkCourseEnrollmentMutation.mutate({
+        id: courseId,
+      })
+    }
   }, [courseId])
   const canAccess = isAdmin || isMentor
   const allowedTabs = isAdmin ? TAB_KEYS : ['module', 'quiz', 'schedule']

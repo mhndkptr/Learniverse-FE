@@ -133,10 +133,23 @@ export default function EditQuizPage() {
     ])
 
     if (quiz) {
+      // --- PERBAIKAN DI SINI ---
       const formatDate = (dateString) => {
         if (!dateString) return ''
-        return new Date(dateString).toISOString().slice(0, 16)
+        const date = new Date(dateString)
+
+        // Dapatkan selisih waktu lokal user dengan UTC (dalam menit)
+        // Untuk WIB (UTC+7), offset biasanya -420
+        const offset = date.getTimezoneOffset()
+
+        // Kita "geser" waktu date object ini seolah-olah UTC adalah waktu lokal
+        // agar saat dipanggil toISOString() angkanya sesuai jam lokal
+        const localDate = new Date(date.getTime() - offset * 60 * 1000)
+
+        // Ambil string ISO dan potong bagian detik & Z
+        return localDate.toISOString().slice(0, 16)
       }
+      // -------------------------
 
       form.reset({
         title: quiz.title || '',

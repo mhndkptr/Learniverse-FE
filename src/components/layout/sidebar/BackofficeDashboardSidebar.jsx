@@ -35,7 +35,7 @@ export function BackofficeDashboardSidebar({ ...props }) {
   })
 
   React.useEffect(() => {
-    if (user.role === 'ADMIN') {
+    if (user?.role === 'ADMIN') {
       setData({
         navMain: [
           {

@@ -109,8 +109,20 @@ export default function EnrollCourseDialog({ course, onOpenChange, open }) {
                 </p>
               </div>
               <div className="text-right">
-                <span className="mt-2 block font-medium text-gray-900">
+                <span className="mt-2 block text-sm font-medium text-gray-900">
                   Rp{course.price.toLocaleString('id-ID')}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-4 border-t pt-3">
+              <div className="flex justify-between text-sm font-medium">
+                <span>Platform Fee</span>
+                <span>
+                  Rp
+                  {(
+                    Number(process.env.NEXT_PUBLIC_APP_PLATFORM_FEE) || 0
+                  ).toLocaleString('id-ID')}
                 </span>
               </div>
             </div>

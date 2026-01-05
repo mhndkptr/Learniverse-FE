@@ -99,16 +99,31 @@ export default function EnrollCourseDialog({ course, onOpenChange, open }) {
       {!snapToken && (
         <>
           <div className="rounded-md border bg-gray-50 p-4">
-            <p className="text-sm text-gray-600">
-              <span className="font-semibold">1x</span> {course.title}
-            </p>
-            <p className="mt-1 line-clamp-2 text-xs text-gray-500">
-              {course.description}
-            </p>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm text-gray-600">
+                  <span className="font-semibold">1x</span> {course.title}
+                </p>
+                <p className="mt-1 line-clamp-2 text-xs text-gray-500">
+                  {course.description}
+                </p>
+              </div>
+              <div className="text-right">
+                <span className="mt-2 block font-medium text-gray-900">
+                  Rp{course.price.toLocaleString('id-ID')}
+                </span>
+              </div>
+            </div>
 
             <div className="mt-3 flex justify-between text-sm font-medium">
               <span>Sub total</span>
-              <span>Rp{course.price.toLocaleString('id-ID')}</span>
+              <span>
+                Rp
+                {(
+                  course.price +
+                  (Number(process.env.NEXT_PUBLIC_APP_PLATFORM_FEE) || 0)
+                ).toLocaleString('id-ID')}
+              </span>
             </div>
           </div>
 

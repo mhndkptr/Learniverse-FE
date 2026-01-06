@@ -181,12 +181,14 @@ export default function QuizReviewPage() {
                         {Math.round(item.grade || 0)}
                       </div>
                       <div className="text-right">
-                        <button
-                          className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-                          onClick={() => handleSelectAttempt(item.id)}
-                        >
-                          Review
-                        </button>
+                        {item.status === 'FINISHED' && (
+                          <button
+                            className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                            onClick={() => handleSelectAttempt(item.id)}
+                          >
+                            Review
+                          </button>
+                        )}
                       </div>
                     </div>
                   )
@@ -316,16 +318,22 @@ export default function QuizReviewPage() {
                         <p className="text-xs font-semibold text-gray-700">
                           Attempt #{attempts.length - index}
                         </p>
-                        <p className="text-xs text-gray-500">
-                          Score: {Math.round(item.grade || 0)}%
-                        </p>
+                        {item.status === 'FINISHED' ? (
+                          <p className="text-xs text-gray-500">
+                            Score: {Math.round(item.grade || 0)}%
+                          </p>
+                        ) : (
+                          <p className="text-xs text-gray-500">In Progress</p>
+                        )}
                       </div>
-                      <button
-                        className="rounded-md border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-                        onClick={() => handleSelectAttempt(item.id)}
-                      >
-                        Review
-                      </button>
+                      {item.status === 'FINISHED' && (
+                        <button
+                          className="rounded-md border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                          onClick={() => handleSelectAttempt(item.id)}
+                        >
+                          Review
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

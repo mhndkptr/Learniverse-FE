@@ -8,10 +8,11 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { useBackofficeBreadcrumb } from '@/contexts/backoffice-breadcrumb.context'
 import { useDebounce } from '@/hooks/use-debounce.hook'
-import { Search, RefreshCcw, ArrowUpDown } from 'lucide-react'
+import { Search, RefreshCcw, ArrowUpDown, Trash2 } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useGetAllUser } from '@/hooks/user.hook'
+import { useDeleteUserMutation, useGetAllUser } from '@/hooks/user.hook'
+import ConfirmDialogDelete from '@/components/core/backoffice/course/ConfirmDialogDelete'
 
 // Dropdown Sort
 const SortDropdown = ({ sortConfig, onSortChange, options }) => {
@@ -52,6 +53,8 @@ export default function BackofficeUserPage() {
   const initialSearchTerm = searchParams.get('search') || ''
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm)
   const debouncedSearchTerm = useDebounce(searchTerm, 500)
+  const { mutateAsync: deleteUser, isPending: isDeleting } =
+    useDeleteUserMutation({ onSuccess: () => {} })
 
   const [sortConfig, setSortConfig] = useState({
     key: searchParams.get('sortKey') || 'created_at',
@@ -60,6 +63,9 @@ export default function BackofficeUserPage() {
 
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
+
+  const [deleteIds, setDeleteIds] = useState(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   // --- BREADCRUMB ---
   useEffect(() => {
@@ -91,6 +97,26 @@ export default function BackofficeUserPage() {
     }
     return params.toString()
   }, [])
+
+  const handleRowAction = (action, row) => {
+    if (action === 'delete') {
+      setDeleteIds(row.id)
+      setIsDeleteDialogOpen(true)
+    }
+  }
+
+  const handleConfirmDelete = async () => {
+    if (deleteIds) {
+      try {
+        await deleteUser({ id: deleteIds })
+        setIsDeleteDialogOpen(false)
+        setDeleteIds(null)
+        refetch()
+      } catch (error) {
+        console.error('Failed to delete user records', error)
+      }
+    }
+  }
 
   useEffect(() => {
     const nextQuery = buildQueryString(
@@ -133,6 +159,24 @@ export default function BackofficeUserPage() {
             </Badge>
           )
         },
+      },
+      {
+        key: 'actions',
+        header: 'Actions',
+        sortable: false,
+        render: (row) => (
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleRowAction('delete', row)}
+              className="h-8 w-8 text-gray-400 hover:bg-red-50 hover:text-red-600"
+              title="Delete User"
+            >
+              <Trash2 className="h-5 w-5" />
+            </Button>
+          </div>
+        ),
       },
     ],
     []
@@ -211,6 +255,17 @@ export default function BackofficeUserPage() {
             />
           </div>
         </div>
+
+        <ConfirmDialogDelete
+          isOpen={isDeleteDialogOpen}
+          onClose={() => setIsDeleteDialogOpen(false)}
+          onConfirm={handleConfirmDelete}
+          title="Delete User"
+          description="Are you sure you want to delete this user?"
+          isLoading={isDeleting}
+          variant="danger"
+          confirmText="Delete"
+        />
       </div>
     </>
   )

@@ -37,11 +37,12 @@ import {
   Plus,
   Save,
   Trash2,
+  UploadCloud,
   X,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import z from 'zod'
@@ -61,6 +62,8 @@ const quizFormSchema = z.object({
 export default function EditQuizPage() {
   const router = useRouter()
   const params = useParams()
+
+  const fileInputRef = useRef(null)
 
   // FIX 1: Gunakan optional chaining pada params untuk mencegah error jika params null
   const quizId = params?.quizId
@@ -192,7 +195,6 @@ export default function EditQuizPage() {
 
   // --- HANDLER: SAVE QUESTION (CREATE / UPDATE) ---
   const handleSaveQuestion = () => {
-    // FIX 4: Pastikan editingQuestion tidak null
     if (!editingQuestion) return
 
     // 1. Validasi Input UI
@@ -202,26 +204,45 @@ export default function EditQuizPage() {
       return toast.error('Please select at least one correct answer')
 
     // 2. Mapping Payload
+    // NOTE: Karena ada File upload, pastikan hook API Anda bisa menerima
+    // object ini dan mengonversinya ke FormData jika backend meminta Multipart.
     const payload = {
       question: editingQuestion.text,
       type: editingQuestion.type,
+      // Masukkan image ke payload (bisa berupa File object atau null/string url lama)
+      image: editingQuestion.image,
       quiz_option_answers: editingQuestion.options.map((opt) => ({
         answer: opt.text,
         is_correct: opt.isCorrect,
       })),
     }
 
+    const form = new FormData()
+
+    form.append('question', payload.question)
+    form.append('type', payload.type)
+    if (payload.image instanceof File) {
+      form.append('image', payload.image)
+    } else if (payload.image === null) {
+      form.append('image', '')
+    }
+    payload.quiz_option_answers.forEach((opt, index) => {
+      form.append(`quiz_option_answers[${index}][answer]`, opt.answer)
+      form.append(`quiz_option_answers[${index}][is_correct]`, opt.is_correct)
+    })
+
     // 3. Eksekusi Mutasi
     if (editingQuestion?.id) {
       // UPDATE
       editQuizQuestionMutation.mutate({
         id: editingQuestion.id,
-        payload: payload,
+        payload: form,
       })
     } else {
       // CREATE
+      form.append('quiz_id', quizId)
       addQuizQuestionMutation.mutate({
-        payload: { ...payload, quiz_id: quizId },
+        payload: form,
       })
     }
   }
@@ -232,6 +253,8 @@ export default function EditQuizPage() {
       id: null,
       type: 'SINGLE_CHOICE',
       text: '',
+      image: null, // Reset image file
+      imagePreview: null, // Reset image preview
       options: [
         { text: '', isCorrect: false },
         { text: '', isCorrect: false },
@@ -241,7 +264,6 @@ export default function EditQuizPage() {
   }
 
   const handleOpenEditModal = (questionFromServer) => {
-    // FIX 5: Guard clause jika questionFromServer null/undefined
     if (!questionFromServer) return
 
     const uiOptions = questionFromServer.quiz_option_answers
@@ -252,14 +274,52 @@ export default function EditQuizPage() {
       : questionFromServer.options || []
 
     const qData = {
-      id: questionFromServer.id, // Aman karena sudah dicek di atas
+      id: questionFromServer.id,
       type: questionFromServer.type || 'SINGLE_CHOICE',
       text: questionFromServer.question || questionFromServer.text,
+      // Load image dari server jika ada
+      image: null, // Kita set null untuk file baru, biarkan backend handle image lama jika tidak diubah
+      imagePreview:
+        questionFromServer.image || questionFromServer.image_uri || null,
       options: uiOptions,
     }
 
     setEditingQuestion(JSON.parse(JSON.stringify(qData)))
     setShowQuestionModal(true)
+  }
+
+  // --- IMAGE HANDLERS ---
+  const handleTriggerFileSelect = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validasi ukuran/tipe jika perlu
+      if (file.size > 2 * 1024 * 1024) {
+        // 2MB limit contoh
+        return toast.error('Image size must be less than 2MB')
+      }
+
+      const previewUrl = URL.createObjectURL(file)
+      setEditingQuestion({
+        ...editingQuestion,
+        image: file, // Simpan File object untuk payload
+        imagePreview: previewUrl, // Simpan URL untuk display UI
+      })
+    }
+  }
+
+  const handleRemoveImage = (e) => {
+    e.stopPropagation() // Mencegah trigger klik upload
+    setEditingQuestion({
+      ...editingQuestion,
+      image: null, // Hapus file dari payload (atau kirim flag delete jika backend support)
+      imagePreview: null,
+    })
+    // Reset value input agar bisa pilih file yang sama lagi jika berubah pikiran
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   // --- MODAL FORM LOGIC ---
@@ -651,11 +711,64 @@ export default function EditQuizPage() {
                   />
                 </div>
 
-                <div className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 p-4 text-center hover:bg-gray-50">
-                  <ImageIcon className="mb-2 h-8 w-8 text-gray-400" />
-                  <p className="text-xs text-gray-500">
-                    Click to upload image (Optional)
-                  </p>
+                <div className="space-y-2">
+                  <Label>Question Image (Optional)</Label>
+
+                  {/* Hidden File Input */}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                  />
+
+                  {!editingQuestion.imagePreview ? (
+                    // UPLOAD PLACEHOLDER
+                    <div
+                      onClick={handleTriggerFileSelect}
+                      className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 bg-gray-50/50 p-6 text-center transition-colors hover:border-amber-300 hover:bg-gray-100"
+                    >
+                      <div className="mb-2 rounded-full bg-white p-2 shadow-sm">
+                        <UploadCloud className="h-6 w-6 text-amber-600" />
+                      </div>
+                      <p className="text-sm font-medium text-gray-700">
+                        Click to upload image
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        SVG, PNG, JPG or GIF (max. 2MB)
+                      </p>
+                    </div>
+                  ) : (
+                    // IMAGE PREVIEW
+                    <div className="relative overflow-hidden rounded-lg border border-gray-200">
+                      {/* Tombol Hapus Gambar */}
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute top-2 right-2 z-10 rounded-full bg-white/90 p-1.5 text-gray-600 shadow-sm backdrop-blur-sm transition-colors hover:bg-red-100 hover:text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+
+                      <div className="relative h-48 w-full bg-gray-100">
+                        <img
+                          src={editingQuestion.imagePreview}
+                          alt="Preview"
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between bg-gray-50 px-3 py-2 text-xs text-gray-500">
+                        <span>Image attached</span>
+                        <span
+                          onClick={handleTriggerFileSelect}
+                          className="cursor-pointer font-medium text-blue-600 hover:underline"
+                        >
+                          Change Image
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-3">

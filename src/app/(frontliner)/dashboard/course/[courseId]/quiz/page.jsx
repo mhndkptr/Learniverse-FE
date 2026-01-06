@@ -158,6 +158,7 @@ export default function QuizPage() {
                 onSecondaryClick={handleReviewClick}
                 isMentor={isMentor}
                 isOverdue={isOverdue}
+                isReviewAvailable={hasFinishedAttempt && quiz.show_review}
               />
             )
           })

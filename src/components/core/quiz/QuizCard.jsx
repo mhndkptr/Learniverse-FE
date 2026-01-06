@@ -16,6 +16,7 @@ export default function QuizCard(props) {
     onSecondaryClick = () => {},
     onPreviewClick = () => {},
     isMentor = false,
+    isOverdue = false,
   } = props
 
   const getStatusBadge = () => {
@@ -76,7 +77,7 @@ export default function QuizCard(props) {
       return
     }
 
-    if (buttonText === 'No Attempts Left') {
+    if (buttonText === 'No Attempts Left' || isOverdue) {
       return
     }
 
@@ -117,9 +118,9 @@ export default function QuizCard(props) {
       {/* Button */}
       <button
         onClick={handleButtonClick}
-        disabled={buttonText === 'No Attempts Left'}
+        disabled={buttonText === 'No Attempts Left' || isOverdue}
         className={`w-full rounded-lg px-4 py-3 text-sm font-semibold transition-colors ${
-          buttonText === 'No Attempts Left'
+          buttonText === 'No Attempts Left' || isOverdue
             ? 'cursor-not-allowed bg-gray-200 text-gray-500'
             : 'bg-amber-700 text-white hover:bg-amber-800'
         }`}

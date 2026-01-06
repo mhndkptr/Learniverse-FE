@@ -157,6 +157,7 @@ export default function QuizPage() {
                 onReviewClick={handleReviewClick}
                 onSecondaryClick={handleReviewClick}
                 isMentor={isMentor}
+                isOverdue={isOverdue}
               />
             )
           })

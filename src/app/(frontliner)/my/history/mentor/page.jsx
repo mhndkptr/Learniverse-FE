@@ -149,7 +149,7 @@ export default function MentorHistoryPage() {
                             <Button
                               className="flex-1 bg-blue-600 text-white hover:bg-blue-700"
                               onClick={() =>
-                                (window.location.href = '/dashboard/course')
+                                (window.location.href = `/dashboard/course/${item.course.id}`)
                               }
                             >
                               Go to Dashboard

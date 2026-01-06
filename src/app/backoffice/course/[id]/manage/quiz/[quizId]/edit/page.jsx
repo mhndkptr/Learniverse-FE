@@ -203,7 +203,6 @@ export default function EditQuizPage() {
 
     // 2. Mapping Payload
     const payload = {
-      quiz_id: quizId,
       question: editingQuestion.text,
       type: editingQuestion.type,
       quiz_option_answers: editingQuestion.options.map((opt) => ({

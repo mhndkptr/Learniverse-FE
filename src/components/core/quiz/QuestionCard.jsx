@@ -1,30 +1,59 @@
 'use client'
 
+import { Check, X } from 'lucide-react' // Optional: Gunakan icon dari library atau SVG bawaan
+
 export default function QuestionCard({
   questionNumber,
   totalQuestions,
   questionText,
+  type = 'SINGLE_CHOICE', // Default ke single choice jika tidak ada props
   options,
-  selectedOption,
+  selectedOptionsIndex = [], // Default array kosong
   onSelectOption,
-  onClearSelection, // <--- Prop baru untuk menghapus jawaban
+  onClearSelection,
   image,
   isReview,
   correctAnswers = [],
-  userAnswer,
+  userAnswers = [], // Asumsikan ini juga array saat mode review
   status,
   timeLeftString,
 }) {
   const progressPercentage = (questionNumber / totalQuestions) * 100
 
+  // --- LOGIKA KLIK OPSI ---
+  const handleOptionClick = (index) => {
+    if (isReview) return
+
+    let newSelection = []
+
+    if (type === 'MULTIPLE_CHOICE') {
+      // Logic Toggle: Cek apakah index sudah ada di array
+      if (selectedOptionsIndex.includes(index)) {
+        // Hapus jika sudah ada
+        newSelection = selectedOptionsIndex.filter((i) => i !== index)
+      } else {
+        // Tambah jika belum ada
+        newSelection = [...selectedOptionsIndex, index]
+      }
+    } else {
+      // Logic Single: Replace array dengan index baru
+      newSelection = [index]
+    }
+
+    // Kirim array baru ke parent
+    onSelectOption(newSelection)
+  }
+
   return (
     <div className="w-full">
-      {/* --- Bagian Header, Timer, Progress Bar (SAMA SEPERTI SEBELUMNYA) --- */}
+      {/* --- Bagian Header, Timer, Progress Bar --- */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="font-medium text-gray-700">📋</span>
           <span className="font-semibold text-gray-700">
-            General Knowledge Quiz
+            {type === 'MULTIPLE_CHOICE'
+              ? 'Multiple Choice Quiz'
+              : 'General Knowledge Quiz'}
           </span>
         </div>
         {!isReview && (
@@ -55,7 +84,14 @@ export default function QuestionCard({
       </div>
 
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-900">{questionText}</h2>
+        <h2 className="text-xl font-bold text-gray-900">
+          {questionText}
+          {type === 'MULTIPLE_CHOICE' && (
+            <span className="ml-2 text-sm font-normal text-gray-500">
+              (Select all that apply)
+            </span>
+          )}
+        </h2>
       </div>
 
       {image && (
@@ -71,55 +107,109 @@ export default function QuestionCard({
       {/* --- Bagian Options --- */}
       <div className="space-y-4">
         {options.map((option, index) => {
-          const isSelected = selectedOption === index || userAnswer === index
-          const isCorrect = correctAnswers.some((ans) => ans.id === option.id)
+          // Cek apakah opsi ini dipilih (baik saat pengerjaan atau saat review history)
+          const isSelected =
+            selectedOptionsIndex?.includes(index) ||
+            (isReview && userAnswers?.includes(index))
+
+          // Cek apakah opsi ini adalah jawaban benar (berdasarkan ID atau teks)
+          const isCorrectAnswer = correctAnswers.some(
+            (ans) => ans.id === option.id
+          )
+
+          // Style Logic untuk Review
+          let reviewBorderClass = ''
+          let reviewBgClass = ''
+
+          if (isReview) {
+            if (isSelected && isCorrectAnswer) {
+              // User memilih BENAR
+              reviewBorderClass = 'border-green-500'
+              reviewBgClass = 'bg-green-50'
+            } else if (isSelected && !isCorrectAnswer) {
+              // User memilih SALAH
+              reviewBorderClass = 'border-red-500'
+              reviewBgClass = 'bg-red-50'
+            } else if (!isSelected && isCorrectAnswer) {
+              // User TIDAK memilih jawaban yang SEHARUSNYA BENAR (Missed)
+              reviewBorderClass = 'border-green-500 border-dashed'
+            }
+          }
+
+          const baseBorderClass = isSelected
+            ? 'border-amber-800 bg-amber-50'
+            : 'border-gray-200 bg-white hover:border-gray-300'
 
           return (
-            <label
+            <div
               key={`${option.id}-${index}`}
-              onClick={() => !isReview && onSelectOption(index)}
+              onClick={() => handleOptionClick(index)}
               className={`flex cursor-pointer items-center rounded-lg border-2 p-4 transition-all ${
-                isSelected
-                  ? 'border-amber-800 bg-amber-50'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
-              } ${isReview && !isCorrect && isSelected ? 'border-red-500 bg-red-50' : ''}`}
+                isReview && (reviewBorderClass || reviewBgClass)
+                  ? `${reviewBorderClass} ${reviewBgClass}`
+                  : baseBorderClass
+              }`}
             >
+              {/* INDICATOR ICON (Circle vs Square) */}
               <div
-                className={`mr-4 flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${
+                className={`mr-4 flex h-5 w-5 flex-shrink-0 items-center justify-center border-2 transition-all ${
+                  type === 'MULTIPLE_CHOICE' ? 'rounded-md' : 'rounded-full' // KOTAK vs BULAT
+                } ${
                   isSelected
                     ? 'border-amber-800 bg-amber-800'
                     : 'border-gray-300 bg-white'
                 }`}
               >
-                {isSelected && (
-                  <div className="h-2 w-2 rounded-full bg-white"></div>
-                )}
+                {isSelected &&
+                  (type === 'MULTIPLE_CHOICE' ? (
+                    // Icon Check untuk Multiple Choice
+                    <svg
+                      className="h-3.5 w-3.5 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  ) : (
+                    // Dot putih untuk Single Choice
+                    <div className="h-2 w-2 rounded-full bg-white"></div>
+                  ))}
               </div>
+
               <span className="flex-1 font-medium text-gray-900">
                 {option?.answer}
               </span>
-              {/* Icon Review Check/Cross (Sama seperti sebelumnya) */}
-              {isReview && isSelected && isCorrect && (
-                <span className="text-lg text-green-600">✓</span>
+
+              {/* REVIEW ICONS */}
+              {isReview && (
+                <div className="ml-2">
+                  {isCorrectAnswer && (
+                    <span className="flex items-center text-sm font-bold text-green-600">
+                      <Check className="mr-1 h-5 w-5" /> Correct
+                    </span>
+                  )}
+                  {isSelected && !isCorrectAnswer && (
+                    <span className="flex items-center text-sm font-bold text-red-600">
+                      <X className="mr-1 h-5 w-5" /> Wrong
+                    </span>
+                  )}
+                </div>
               )}
-              {isReview && isSelected && !isCorrect && (
-                <span className="text-lg text-red-600">✗</span>
-              )}
-              {isReview &&
-                isCorrect &&
-                status === 'false' &&
-                isSelected === false && (
-                  <span className="text-lg text-green-600">✓</span>
-                )}
-            </label>
+            </div>
           )
         })}
       </div>
 
       <div className="mt-6">
-        {/* Bagian untuk menampilkan jawaban benar nya */}
+        {/* List Jawaban Benar (Review Mode) */}
         {isReview && (
-          <div className="mt-4 rounded-lg bg-green-50 p-4">
+          <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4">
             <h3 className="mb-2 font-semibold text-green-800">
               Correct Answer(s):
             </h3>
@@ -132,13 +222,13 @@ export default function QuestionCard({
         )}
       </div>
 
-      {/* --- FITUR BARU: CLEAR SELECTION --- */}
-      {/* Muncul hanya jika bukan review DAN user sudah memilih jawaban */}
-      {!isReview && selectedOption !== undefined && (
+      {/* --- BUTTON CLEAR SELECTION --- */}
+      {/* Muncul jika bukan review DAN array tidak kosong */}
+      {!isReview && selectedOptionsIndex && selectedOptionsIndex.length > 0 && (
         <div className="mt-3 flex justify-end">
           <button
             onClick={(e) => {
-              e.stopPropagation() // Mencegah bubbling event
+              e.stopPropagation()
               onClearSelection()
             }}
             className="flex items-center gap-1 text-sm text-gray-400 transition-colors hover:text-red-500 hover:underline"

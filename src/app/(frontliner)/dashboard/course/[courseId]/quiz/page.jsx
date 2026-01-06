@@ -114,6 +114,8 @@ export default function QuizPage() {
             const hasFinishedAttempt = attempts.some(
               (attempt) => attempt.status === 'FINISHED'
             )
+            const isOverdue = new Date(quiz.end_date) < new Date()
+
             return (
               <QuizCard
                 key={quiz.id}
@@ -140,9 +142,11 @@ export default function QuizPage() {
                       ? 'Continue Attempt Quiz'
                       : attempts.length === 0
                         ? 'Attempt Quiz'
-                        : attempts.length < quiz.max_attempt
-                          ? 'Re-attempt Quiz'
-                          : 'No Attempts Left'
+                        : isOverdue
+                          ? 'Overdue'
+                          : attempts.length < quiz.max_attempt
+                            ? 'Re-attempt Quiz'
+                            : 'No Attempts Left'
                 }
                 secondaryButtonText={
                   hasFinishedAttempt ? 'Review Quiz' : undefined

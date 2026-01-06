@@ -112,6 +112,7 @@ export async function deleteQuizQuestionAction({ id }) {
 
 export async function createQuizQuestionAction({ body }) {
   try {
+    console.log('body', body)
     const res = await request.post('/quiz/question', body)
     return res.data
   } catch (error) {

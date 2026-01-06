@@ -221,7 +221,7 @@ export default function EditQuizPage() {
     } else {
       // CREATE
       addQuizQuestionMutation.mutate({
-        payload: payload,
+        payload: { ...payload, quiz_id: quizId },
       })
     }
   }

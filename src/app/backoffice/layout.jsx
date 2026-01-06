@@ -16,15 +16,15 @@ export default function BackofficeLayout({ children }) {
   const isManageRoute =
     pathname?.includes('/backoffice/course/') && pathname?.includes('/manage')
 
-  if (isAuthLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <p>Loading...</p>
-      </div>
-    )
-  }
+  // if (isAuthLoading) {
+  //   return (
+  //     <div className="flex h-full items-center justify-center">
+  //       <p>Loading...</p>
+  //     </div>
+  //   )
+  // }
 
-  if (user?.role !== 'ADMIN' && !isManageRoute) {
+  if (user && user?.role !== 'ADMIN' && !isManageRoute) {
     return (
       <div className="flex h-full items-center justify-center px-6 py-24">
         <div className="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-8 text-center shadow-sm">

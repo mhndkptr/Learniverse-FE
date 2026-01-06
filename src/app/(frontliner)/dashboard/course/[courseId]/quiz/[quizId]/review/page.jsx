@@ -261,6 +261,7 @@ export default function QuizReviewPage() {
                 onSelectOption={() => {}}
                 onClearSelection={() => {}}
                 timeLeftString="00:00"
+                image={currentQuestion?.image_uri}
               />
             ) : (
               <p>No questions available.</p>

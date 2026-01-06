@@ -107,6 +107,7 @@ export default function QuizPreviewPage() {
                   onSelectOption={() => {}} // No-op
                   onClearSelection={() => {}} // No-op
                   timeLeftString="--:--"
+                  image={currentQuestion?.image_uri}
                 />
               ) : (
                 <p>No questions available in this quiz.</p>

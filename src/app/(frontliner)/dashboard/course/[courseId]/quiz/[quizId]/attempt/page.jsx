@@ -304,6 +304,7 @@ export default function QuizAttemptPage() {
                 onClearSelection={handleClearSelection}
                 timeLeftString={formatTime(timeLeft)}
                 isReview={false}
+                image={currentQuestion?.image_uri}
               />
             ) : (
               <p>No questions available.</p>

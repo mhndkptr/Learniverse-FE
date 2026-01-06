@@ -140,10 +140,10 @@ export default function QuizPage() {
                     ? 'Preview Quiz'
                     : quiz.active_attempt_id
                       ? 'Continue Attempt Quiz'
-                      : attempts.length === 0
-                        ? 'Attempt Quiz'
-                        : isOverdue
-                          ? 'Overdue'
+                      : isOverdue
+                        ? 'Overdue'
+                        : attempts.length === 0
+                          ? 'Attempt Quiz'
                           : attempts.length < quiz.max_attempt
                             ? 'Re-attempt Quiz'
                             : 'No Attempts Left'

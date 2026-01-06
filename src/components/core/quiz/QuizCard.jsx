@@ -17,6 +17,7 @@ export default function QuizCard(props) {
     onPreviewClick = () => {},
     isMentor = false,
     isOverdue = false,
+    isReviewAvailable = false,
   } = props
 
   const getStatusBadge = () => {
@@ -128,7 +129,7 @@ export default function QuizCard(props) {
         {buttonText}
       </button>
 
-      {secondaryButtonText ? (
+      {isReviewAvailable && secondaryButtonText ? (
         <button
           onClick={() => onSecondaryClick(quiz)}
           className="mt-3 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"

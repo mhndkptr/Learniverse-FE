@@ -223,8 +223,6 @@ export default function EditQuizPage() {
     form.append('type', payload.type)
     if (payload.image instanceof File) {
       form.append('image', payload.image)
-    } else if (payload.image === null) {
-      form.append('image', '')
     }
     payload.quiz_option_answers.forEach((opt, index) => {
       form.append(`quiz_option_answers[${index}][answer]`, opt.answer)

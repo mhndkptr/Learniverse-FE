@@ -126,7 +126,14 @@ export default function QuizAttemptPage() {
     const existingAnswers = {}
     ;(attempt.quiz_attempt_question_answers || []).forEach((answer) => {
       if (answer.quiz_question_id && answer.quiz_option_answer_id) {
-        existingAnswers[answer.quiz_question_id] = answer.quiz_option_answer_id
+        // Jika belum ada key question_id, buat array baru
+        if (!existingAnswers[answer.quiz_question_id]) {
+          existingAnswers[answer.quiz_question_id] = []
+        }
+        // Push option_id ke array
+        existingAnswers[answer.quiz_question_id].push(
+          answer.quiz_option_answer_id
+        )
       }
     })
 
@@ -168,14 +175,19 @@ export default function QuizAttemptPage() {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`
   }
 
-  const handleSelectOption = (optionIndex) => {
+  const handleSelectOption = (selectedIndices) => {
     const currentQuestion = questions[currentQuestionIndex]
-    const option = currentQuestion?.quiz_option_answers?.[optionIndex]
-    if (!currentQuestion || !option) return
+    if (!currentQuestion) return
+
+    // Convert array index menjadi array Option IDs
+    const currentOptions = currentQuestion.quiz_option_answers || []
+    const selectedOptionIds = selectedIndices
+      .map((index) => currentOptions[index]?.id)
+      .filter((id) => id !== undefined)
 
     setAnswers((prev) => ({
       ...prev,
-      [currentQuestion.id]: option.id,
+      [currentQuestion.id]: selectedOptionIds, // Simpan sebagai array
     }))
   }
 
@@ -211,10 +223,16 @@ export default function QuizAttemptPage() {
   }
 
   const buildAnswerPayload = () => {
-    return Object.entries(answers).map(([questionId, optionId]) => ({
-      quiz_question_id: questionId,
-      quiz_option_answer_id: optionId,
-    }))
+    // Kita gunakan flatMap karena 1 pertanyaan bisa punya banyak row jawaban (Multiple Choice)
+    return Object.entries(answers).flatMap(([questionId, optionIds]) => {
+      // Pastikan optionIds adalah array (guard clause)
+      const ids = Array.isArray(optionIds) ? optionIds : [optionIds]
+
+      return ids.map((optionId) => ({
+        quiz_question_id: questionId,
+        quiz_option_answer_id: optionId,
+      }))
+    })
   }
 
   const handleSubmitQuiz = (isAutoSubmit = false) => {
@@ -260,12 +278,14 @@ export default function QuizAttemptPage() {
 
   const currentQuestion = questions[currentQuestionIndex]
   const currentOptions = currentQuestion?.quiz_option_answers || []
-  const selectedOptionId = currentQuestion
-    ? answers[currentQuestion.id]
-    : undefined
-  const selectedOptionIndex = currentOptions.findIndex(
-    (opt) => opt.id === selectedOptionId
-  )
+
+  // Ambil jawaban user untuk soal ini (Array of IDs)
+  const currentUserAnswers = answers[currentQuestion?.id] || []
+
+  // Cari index dari setiap ID jawaban di dalam list opsi
+  const selectedOptionsIndex = currentOptions
+    .map((opt, index) => (currentUserAnswers.includes(opt.id) ? index : -1))
+    .filter((index) => index !== -1)
 
   return (
     <div className="min-h-screen p-6">
@@ -276,11 +296,10 @@ export default function QuizAttemptPage() {
               <QuestionCard
                 questionNumber={currentQuestionIndex + 1}
                 totalQuestions={questions.length}
+                type={currentQuestion.type}
                 questionText={currentQuestion.question}
                 options={currentOptions}
-                selectedOption={
-                  selectedOptionIndex >= 0 ? selectedOptionIndex : undefined
-                }
+                selectedOptionsIndex={selectedOptionsIndex}
                 onSelectOption={handleSelectOption}
                 onClearSelection={handleClearSelection}
                 timeLeftString={formatTime(timeLeft)}

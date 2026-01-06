@@ -59,7 +59,12 @@ export default function QuizReviewPage() {
   const answerMap = useMemo(() => {
     const map = {}
     ;(attempt?.quiz_attempt_question_answers || []).forEach((answer) => {
-      map[answer.quiz_question_id] = answer.quiz_option_answer_id
+      // Inisialisasi array jika belum ada
+      if (!map[answer.quiz_question_id]) {
+        map[answer.quiz_question_id] = []
+      }
+      // Push ID jawaban
+      map[answer.quiz_question_id].push(answer.quiz_option_answer_id)
     })
     return map
   }, [attempt])
@@ -212,15 +217,26 @@ export default function QuizReviewPage() {
   }
 
   const currentQuestion = questions[currentQuestionIndex]
-  const userAnswerId = currentQuestion ? answerMap[currentQuestion.id] : null
   const optionList = currentQuestion?.quiz_option_answers || []
-  const userAnswerIndex = optionList.findIndex((opt) => opt.id === userAnswerId)
-  const correctAnswerIndex = optionList.filter((opt) => opt.is_correct)
 
-  let status = 'unanswered'
-  if (userAnswerIndex !== -1 && userAnswerIndex !== null) {
-    status = userAnswerIndex === correctAnswerIndex ? 'correct' : 'false'
-  }
+  // Ambil jawaban user (Array of IDs)
+  const currentUserAnswerIds = currentQuestion
+    ? answerMap[currentQuestion.id] || []
+    : []
+
+  // Mapping ID jawaban user ke Index (0, 1, 2, ...) untuk UI
+  const userAnswersIndex = optionList
+    .map((opt, index) => (currentUserAnswerIds.includes(opt.id) ? index : -1))
+    .filter((index) => index !== -1)
+
+  // Ambil list jawaban benar (Object array)
+  const correctAnswers = optionList.filter((opt) => opt.is_correct)
+
+  // Status sederhana (Optional, karena QuestionCard sudah handle detail per opsi)
+  const isCorrect =
+    correctAnswers.every((ca) => currentUserAnswerIds.includes(ca.id)) &&
+    currentUserAnswerIds.length === correctAnswers.length
+  const status = isCorrect ? 'correct' : 'false'
 
   return (
     <div className="min-h-max p-6">
@@ -238,10 +254,10 @@ export default function QuizReviewPage() {
                 questionText={currentQuestion.question}
                 options={optionList}
                 isReview={true}
-                userAnswer={userAnswerIndex}
-                correctAnswers={[...correctAnswerIndex]}
+                userAnswers={userAnswersIndex}
+                correctAnswers={correctAnswers}
                 status={status}
-                selectedOption={userAnswerIndex}
+                selectedOption={userAnswersIndex}
                 onSelectOption={() => {}}
                 onClearSelection={() => {}}
                 timeLeftString="00:00"
